@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Psalmless</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --page: #EDEFEA;
+  --leaf: #F8F9F6;
+  --ink: #1D2230;
+  --muted: #646A78;
+  --rule: #CDD1C9;
+  --rubric: #B3261E;
+  --rubric-ink: #FFFFFF;
+  --gold: #A67A1E;
+  --good: #2E7D4F;
+  --skip: #9AA0AC;
+  --display: "IM Fell English SC", "Iowan Old Style", Georgia, serif;
+  --body: "Alegreya Sans", "Avenir Next", "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #13151B; --leaf: #1C1F27; --ink: #E9E7E0; --muted: #9DA2AE;
+    --rule: #30343F; --rubric: #E0574B; --rubric-ink: #16090A; --gold: #D6A845;
+    --good: #5CC08A; --skip: #5B606C; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #13151B; --leaf: #1C1F27; --ink: #E9E7E0; --muted: #9DA2AE;
+  --rule: #30343F; --rubric: #E0574B; --rubric-ink: #16090A; --gold: #D6A845;
+  --good: #5CC08A; --skip: #5B606C; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--ink);
+  font: 17px/1.5 var(--body);
+  padding: 32px 16px 64px;
+}
+.wrap { max-width: 680px; margin: 0 auto; display: grid; gap: 28px; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
+
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--rule); padding-bottom: 12px; }
+h1 { font: 400 clamp(2.4rem, 7vw, 3.4rem)/1 var(--display); margin: 0; letter-spacing: .01em; }
+h1 .p { color: var(--rubric); }
+.tag { font: 500 .78rem var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.stats { display: flex; gap: 18px; font: .8rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats b { color: var(--ink); font-weight: 500; }
+
+.leaf { background: var(--leaf); border: 1px solid var(--rule); border-radius: 4px; padding: 24px; display: grid; gap: 20px; }
+h2 { font: 400 1.45rem/1.1 var(--display); margin: 0; }
+h2 .v { color: var(--rubric); margin-right: .3em; }
+
+/* game */
+.slots { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.slot { border: 1px solid var(--rule); border-radius: 3px; min-height: 40px; padding: 6px 10px; display: flex; align-items: center; gap: 8px; font-size: .92rem; overflow: hidden; }
+.slot .t { font: .72rem var(--mono); color: var(--muted); flex: none; }
+.slot.wrong { border-color: var(--rubric); }
+.slot.wrong .t { color: var(--rubric); }
+.slot.skipped { background: color-mix(in srgb, var(--skip) 18%, transparent); }
+.slot.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.slot.right .t { color: var(--good); }
+.slot.now { border-color: var(--ink); }
+.guesslog { display: grid; gap: 4px; font-size: .95rem; }
+.guesslog div { display: flex; gap: 10px; border-bottom: 1px dotted var(--rule); padding: 3px 0; }
+.guesslog .n { font: .75rem/1.9 var(--mono); color: var(--muted); width: 2.5em; flex: none; }
+.guesslog .x { color: var(--rubric); }
+.guesslog .s { color: var(--muted); font-style: italic; }
+
+.player { display: flex; align-items: center; gap: 16px; }
+.play { width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--rubric); color: var(--rubric-ink); display: grid; place-items: center; flex: none; }
+.play:disabled { opacity: .4; cursor: default; }
+.play svg { width: 26px; height: 26px; fill: currentColor; }
+.bar { flex: 1; display: grid; gap: 6px; }
+.track { position: relative; height: 10px; background: color-mix(in srgb, var(--ink) 8%, transparent); border-radius: 2px; overflow: hidden; }
+.track .unlocked { position: absolute; inset: 0 auto 0 0; background: color-mix(in srgb, var(--rubric) 22%, transparent); }
+.track .prog { position: absolute; inset: 0 auto 0 0; background: var(--rubric); width: 0; }
+.track .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--leaf); }
+.scale { display: flex; justify-content: space-between; font: .72rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.guessrow { position: relative; display: flex; gap: 8px; flex-wrap: wrap; }
+.guessrow input { flex: 1 1 240px; min-width: 0; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 3px; background: var(--page); }
+.btn { padding: 11px 18px; border-radius: 3px; border: 1px solid var(--ink); background: var(--ink); color: var(--leaf); font-weight: 700; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); font-weight: 500; }
+.btn:disabled { opacity: .4; cursor: default; }
+.sugg { position: absolute; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--leaf); border: 1px solid var(--rule); border-radius: 3px; max-height: 260px; overflow-y: auto; z-index: 5; box-shadow: 0 10px 24px rgb(0 0 0 / .12); }
+.sugg li { padding: 7px 10px; border-radius: 2px; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; }
+.sugg li small { color: var(--muted); text-align: right; }
+.sugg li.on, .sugg li:hover { background: color-mix(in srgb, var(--rubric) 12%, transparent); }
+
+.reveal { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: center; border-top: 1px solid var(--rule); padding-top: 20px; }
+.reveal img { width: 120px; height: 120px; border-radius: 3px; object-fit: cover; background: var(--rule); }
+.reveal .verdict { font: 500 .78rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.reveal .verdict.win { color: var(--good); }
+.reveal .verdict.lose { color: var(--rubric); }
+.reveal h3 { font: 400 1.6rem/1.15 var(--display); margin: 2px 0; text-wrap: balance; }
+.reveal p { margin: 0; color: var(--muted); }
+.reveal .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.reveal a { color: var(--rubric); }
+.status { color: var(--muted); font-size: .95rem; margin: 0; }
+.status.err { color: var(--rubric); }
+
+/* settings */
+.label { font: 500 .75rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--rule); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: .92rem; display: inline-flex; gap: 6px; align-items: center; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--leaf); border-color: var(--ink); }
+.chip .ct { font: .7rem var(--mono); opacity: .65; }
+.addrow { display: flex; gap: 8px; position: relative; }
+.chip.add { border-style: dashed; color: var(--muted); }
+.chip.add:hover { color: var(--ink); border-color: var(--ink); }
+.chip.add b { color: var(--rubric); font-weight: 700; }
+.sugg li.none { color: var(--muted); cursor: default; background: none; }
+.hint { margin: 0; font-size: .85rem; color: var(--muted); }
+.addrow input { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 3px; background: var(--page); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--rubric); font: 500 .75rem var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+
+.years { display: grid; gap: 10px; }
+.yearvals { font: 400 1.6rem var(--display); display: flex; align-items: baseline; gap: 10px; }
+.yearvals span.dash { color: var(--muted); font-size: 1.1rem; }
+.range { position: relative; height: 28px; }
+.range .rail { position: absolute; left: 0; right: 0; top: 12px; height: 4px; background: var(--rule); border-radius: 2px; }
+.range .fill { position: absolute; top: 12px; height: 4px; background: var(--rubric); border-radius: 2px; }
+.range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; height: 28px; }
+.range input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 20px; height: 20px; border-radius: 50%; background: var(--leaf); border: 2px solid var(--rubric); cursor: grab; }
+.range input::-moz-range-thumb { pointer-events: auto; width: 16px; height: 16px; border-radius: 50%; background: var(--leaf); border: 2px solid var(--rubric); cursor: grab; }
+.range input::-webkit-slider-runnable-track { background: none; }
+.range input::-moz-range-track { background: none; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button { font: .78rem var(--mono); border: 1px solid var(--rule); background: transparent; border-radius: 3px; padding: 4px 8px; }
+.foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--rule); padding-top: 16px; }
+.poolinfo { font: .82rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 520px) {
+  .leaf { padding: 18px; }
+  .slot .g { display: none; }
+  .slot { justify-content: center; padding: 6px 4px; }
+  .reveal { grid-template-columns: 84px 1fr; }
+  .reveal img { width: 84px; height: 84px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span class="p">P</span>salmless</h1>
+      <div class="tag">Name the worship song from the first second</div>
+    </div>
+    <div class="stats">
+      <span>Played <b id="stPlayed">0</b></span>
+      <span>Won <b id="stWon">0</b></span>
+      <span>Streak <b id="stStreak">0</b></span>
+    </div>
+  </header>
+
+  <section class="leaf" id="game" aria-live="polite">
+    <h2><span class="v">℣</span>Listen</h2>
+    <div class="slots" id="slots"></div>
+    <div class="player">
+      <button class="play" id="playBtn" aria-label="Play clip" disabled>
+        <svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>
+      </button>
+      <div class="bar">
+        <div class="track" id="track"><div class="unlocked" id="unlocked"></div><div class="prog" id="prog"></div></div>
+        <div class="scale"><span id="clipLen">0.5s unlocked</span><span>16s</span></div>
+      </div>
+    </div>
+    <div class="guessrow" id="guessRow">
+      <input id="guess" type="text" placeholder="Type a song title…" autocomplete="off" disabled>
+      <button class="btn" id="submitBtn" disabled>Guess</button>
+      <button class="btn ghost" id="skipBtn" disabled>Skip +</button>
+      <ul class="sugg" id="sugg" hidden></ul>
+    </div>
+    <div class="guesslog" id="log"></div>
+    <p class="status" id="status">Gathering songs…</p>
+    <div class="reveal" id="reveal" hidden>
+      <img id="rvArt" alt="">
+      <div>
+        <div class="verdict" id="rvVerdict"></div>
+        <h3 id="rvTitle"></h3>
+        <p id="rvMeta"></p>
+        <div class="acts">
+          <button class="btn" id="nextBtn">Next song</button>
+          <button class="btn ghost" id="fullBtn">Play preview</button>
+          <a id="rvLink" href="#" target="_blank" rel="noopener" class="btn ghost" style="text-decoration:none">Apple Music ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="leaf" id="settings">
+    <h2><span class="v">℟</span>Your hymnal</h2>
+
+    <div style="display:grid;gap:10px">
+      <div class="label"><span>Artists · <span id="selCount">0</span> chosen</span>
+        <span><button class="linkbtn" id="allBtn">All</button> · <button class="linkbtn" id="noneBtn">None</button></span></div>
+      <div class="chips" id="chips"></div>
+      <form class="addrow" id="addForm">
+        <input id="addInput" type="text" placeholder="Search Apple Music for an artist, e.g. SEU Worship" autocomplete="off">
+        <button class="btn ghost" type="submit">Search</button>
+        <ul class="sugg" id="artistResults" hidden></ul>
+      </form>
+    </div>
+
+    <div style="display:grid;gap:10px">
+      <div class="label"><span>Discover</span><button class="linkbtn" id="shuffleBtn">Shuffle</button></div>
+      <p class="hint" id="featHint" hidden>Featured on songs by your picks</p>
+      <div class="chips" id="featured"></div>
+      <p class="hint">More worship collectives and writers</p>
+      <div class="chips" id="discover"></div>
+    </div>
+
+    <div class="years">
+      <div class="label"><span>Release years</span></div>
+      <div class="yearvals"><span id="yMinV"></span><span class="dash">to</span><span id="yMaxV"></span></div>
+      <div class="range">
+        <div class="rail"></div><div class="fill" id="yFill"></div>
+        <input type="range" id="yMin" min="1965" max="2026" step="1" aria-label="Earliest year">
+        <input type="range" id="yMax" min="1965" max="2026" step="1" aria-label="Latest year">
+      </div>
+      <div class="presets">
+        <button data-y="1968-1989">Jesus Movement &amp; '80s</button>
+        <button data-y="1990-2004">'90s CCM</button>
+        <button data-y="2005-2014">Worship boom</button>
+        <button data-y="2015-2026">Modern worship</button>
+        <button data-y="1965-2026">Everything</button>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="poolinfo" id="poolInfo"></span>
+      <button class="btn" id="applyBtn">Deal new songs</button>
+    </div>
+  </section>
+</div>
+
+<audio id="audio" preload="auto"></audio>
+
+<script>
+const CLIPS = [0.5, 1, 2, 4, 8, 16];
+const MAX = CLIPS[CLIPS.length - 1];
+const THIS_YEAR = new Date().getFullYear();
+const ARTISTS = [
+  "Elevation Worship", "Hillsong Worship", "Hillsong UNITED", "Bethel Music", "Chris Tomlin",
+  "Phil Wickham", "Lauren Daigle", "for KING & COUNTRY", "Casting Crowns", "MercyMe",
+  "TobyMac", "Maverick City Music", "Brandon Lake", "Newsboys", "Third Day", "Jeremy Camp",
+  "Matt Redman", "Michael W. Smith", "Amy Grant", "Kari Jobe", "Crowder", "Zach Williams",
+  "Switchfoot", "Skillet", "Lecrae", "Kirk Franklin", "CeCe Winans", "Tauren Wells",
+  "Passion", "Jesus Culture", "Big Daddy Weave", "Rich Mullins", "dc Talk", "Keith & Kristyn Getty",
+  "Sidewalk Prophets", "Matthew West", "Hillsong Young & Free", "Tasha Cobbs Leonard",
+  "Steven Curtis Chapman", "Audio Adrenaline", "Jars of Clay", "Building 429", "Cory Asbury",
+  "Chris Renzema", "Pat Barrett", "We The Kingdom", "Anne Wilson", "Sanctus Real"
+];
+const DEFAULT_ON = ["Elevation Worship", "Hillsong Worship", "Bethel Music", "Chris Tomlin", "Phil Wickham",
+  "Lauren Daigle", "for KING & COUNTRY", "Casting Crowns", "MercyMe", "Maverick City Music", "Brandon Lake", "Crowder"];
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("psalmless:" + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("psalmless:" + k, JSON.stringify(v)); } catch {} }
+};
+
+let artists = store.get("artists", ARTISTS.map(n => ({ name: n, on: DEFAULT_ON.includes(n) })));
+let years = store.get("years", [1995, THIS_YEAR]);
+let stats = store.get("stats", { played: 0, won: 0, streak: 0 });
+const cache = {};          // artist name -> tracks[]
+let pool = [];             // deduped playable songs
+let recent = store.get("recent", []);
+let round = null;
+
+/* ---------- text helpers ---------- */
+function baseTitle(t) {
+  return t.replace(/\s*[\(\[].*?[\)\]]/g, "").replace(/\s+-\s+.*$/, "").trim();
+}
+function norm(t) {
+  return baseTitle(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/&/g, "and").replace(/[^a-z0-9 ]/g, "").replace(/^the /, "").replace(/\s+/g, " ").trim();
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* ---------- settings UI ---------- */
+function renderChips() {
+  const el = $("chips");
+  el.innerHTML = "";
+  artists.forEach((a, i) => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.setAttribute("aria-pressed", a.on);
+    const n = cache[a.name] ? cache[a.name].length : null;
+    b.innerHTML = esc(a.name) + (a.on && n !== null ? ` <span class="ct">${n}</span>` : "");
+    b.onclick = () => { a.on = !a.on; saveSettings(); renderChips(); };
+    el.appendChild(b);
+  });
+  $("selCount").textContent = artists.filter(a => a.on).length;
+}
+function renderYears() {
+  const lo = +$("yMin").value, hi = +$("yMax").value;
+  $("yMinV").textContent = lo; $("yMaxV").textContent = hi;
+  const min = +$("yMin").min, span = +$("yMin").max - min;
+  $("yFill").style.left = ((lo - min) / span * 100) + "%";
+  $("yFill").style.width = ((hi - lo) / span * 100) + "%";
+}
+function saveSettings() { store.set("artists", artists); store.set("years", years); }
+
+$("yMin").max = $("yMax").max = THIS_YEAR;
+$("yMin").value = years[0]; $("yMax").value = years[1];
+$("yMin").oninput = () => { if (+$("yMin").value > +$("yMax").value) $("yMin").value = $("yMax").value; years = [+$("yMin").value, +$("yMax").value]; renderYears(); saveSettings(); };
+$("yMax").oninput = () => { if (+$("yMax").value < +$("yMin").value) $("yMax").value = $("yMin").value; years = [+$("yMin").value, +$("yMax").value]; renderYears(); saveSettings(); };
+document.querySelectorAll(".presets button").forEach(b => b.onclick = () => {
+  const [lo, hi] = b.dataset.y.split("-").map(Number);
+  $("yMin").value = lo; $("yMax").value = Math.min(hi, THIS_YEAR);
+  years = [lo, Math.min(hi, THIS_YEAR)]; renderYears(); saveSettings();
+});
+$("allBtn").onclick = () => { artists.forEach(a => a.on = true); saveSettings(); renderChips(); };
+$("noneBtn").onclick = () => { artists.forEach(a => a.on = false); saveSettings(); renderChips(); };
+function addArtist(name) {
+  const hit = artists.find(a => a.name.toLowerCase() === name.toLowerCase());
+  if (hit) hit.on = true; else artists.push({ name, on: true });
+  saveSettings(); renderChips(); renderDiscover();
+  $("poolInfo").textContent = `Added ${name}. Press Deal new songs to play with them.`;
+}
+
+/* artist search: live lookup against Apple Music's artist index */
+let searchTimer = null, searchSeq = 0;
+async function searchArtists(q) {
+  const seq = ++searchSeq;
+  const list = $("artistResults");
+  try {
+    const data = await jsonp("https://itunes.apple.com/search?" + new URLSearchParams({ term: q, entity: "musicArtist", limit: 10, country: "US" }));
+    if (seq !== searchSeq) return;
+    const res = data.results.filter(r => r.artistName);
+    if (!res.length) { list.innerHTML = `<li class="none">No artists found for “${esc(q)}”</li>`; list.hidden = false; return; }
+    list.innerHTML = res.map(r => {
+      const have = artists.some(a => a.name.toLowerCase() === r.artistName.toLowerCase() && a.on);
+      return `<li data-name="${esc(r.artistName)}">${esc(r.artistName)}<small>${have ? "✓ added" : esc(r.primaryGenreName || "")}</small></li>`;
+    }).join("");
+    list.hidden = false;
+  } catch {
+    if (seq === searchSeq) { list.innerHTML = `<li class="none">Couldn't reach Apple Music. Check your connection.</li>`; list.hidden = false; }
+  }
+}
+$("addInput").oninput = () => {
+  clearTimeout(searchTimer);
+  const q = $("addInput").value.trim();
+  if (q.length < 2) { $("artistResults").hidden = true; return; }
+  searchTimer = setTimeout(() => searchArtists(q), 250);
+};
+$("addForm").onsubmit = e => {
+  e.preventDefault();
+  const q = $("addInput").value.trim();
+  if (q.length >= 2) searchArtists(q);
+};
+$("artistResults").onmousedown = e => {
+  const li = e.target.closest("li[data-name]"); if (!li) return;
+  e.preventDefault();
+  addArtist(li.dataset.name);
+  $("addInput").value = ""; $("artistResults").hidden = true;
+};
+$("addInput").onblur = () => setTimeout(() => $("artistResults").hidden = true, 150);
+$("addInput").onkeydown = e => { if (e.key === "Escape") $("artistResults").hidden = true; };
+
+/* discover: collaborators found in loaded songs + a curated list of worship collectives */
+const DISCOVER = [
+  "SEU Worship", "Red Rocks Worship", "Gateway Worship", "UPPERROOM", "Rivers & Robots", "Vertical Worship",
+  "CityAlight", "Sovereign Grace Music", "Housefires", "Influence Music", "Mosaic MSC", "Life.Church Worship",
+  "Circuit Rider Music", "Planetshakers", "VOUS Worship", "North Point Worship", "Cross Worship",
+  "Forerunner Music", "Worship Together", "Leeland", "Jon Reddick", "Josh Baldwin", "Bryan & Katie Torwalt",
+  "Citipointe Worship", "Shane & Shane", "Kristene DiMarco", "Jenn Johnson", "Chandler Moore", "Naomi Raine",
+  "Cody Carnes", "Hillsong Worship", "Brooke Ligertwood", "Matt Maher", "Josh Baldwin", "All Sons & Daughters",
+  "Kim Walker-Smith", "Sean Feucht", "Tribl", "Bethel Music Kids", "Jesus Image", "Worship Central",
+  "Rend Collective", "Austin Stone Worship", "The Belonging Co", "Hope Darst", "Jonathan & Melissa Helser",
+  "Seacoast Worship", "Christ For The Nations Worship", "Hillsong Kids", "One Voice", "Bethel Music Español"
+];
+let discoverOffset = 0;
+function isChosen(name) { return artists.some(a => a.on && a.name.toLowerCase() === name.toLowerCase()); }
+function collaborators() {
+  const counts = new Map();
+  const chosen = artists.filter(a => a.on);
+  // remove chosen names first so ones containing "&" (Shane & Shane) aren't split apart
+  const strip = s => chosen.reduce((acc, a) => acc.replace(new RegExp(a.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), ","), s);
+  for (const a of chosen) for (const t of cache[a.name] || []) {
+    const feat = (t.title.match(/\((?:feat\.?|with) ([^)]+)\)/i) || [, ""])[1];
+    const names = strip(t.artist + "," + feat).split(/\s*(?:,|&|\s+feat\.?\s+|\s+with\s+)\s*/i);
+    for (let n of names) {
+      n = n.trim();
+      if (n.length < 3 || isChosen(n) || /elevation rhythm|español/i.test(n)) continue;
+      counts.set(n, (counts.get(n) || 0) + 1);
+    }
+  }
+  return [...counts].filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([n]) => n);
+}
+function addChip(el, name) {
+  const b = document.createElement("button");
+  b.className = "chip add";
+  b.innerHTML = `<b>+</b> ${esc(name)}`;
+  b.onclick = () => addArtist(name);
+  el.appendChild(b);
+}
+function renderDiscover() {
+  const feat = collaborators();
+  $("featured").innerHTML = ""; feat.forEach(n => addChip($("featured"), n));
+  $("featHint").hidden = !feat.length; $("featured").hidden = !feat.length;
+  const rest = [...new Set(DISCOVER)].filter(n => !isChosen(n) && !feat.includes(n));
+  $("discover").innerHTML = "";
+  for (let i = 0; i < Math.min(10, rest.length); i++) addChip($("discover"), rest[(discoverOffset + i) % rest.length]);
+}
+$("shuffleBtn").onclick = () => { discoverOffset += 10; renderDiscover(); };
+$("applyBtn").onclick = () => buildPool().then(newRound);
+
+/* ---------- song fetching (iTunes Search API) ---------- */
+// JSONP instead of fetch: Apple rejects CORS from file:// pages (Origin: null)
+let jsonpId = 0;
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = "__psalm" + (++jsonpId);
+    const s = document.createElement("script");
+    const done = () => { delete window[cb]; s.remove(); clearTimeout(timer); };
+    const timer = setTimeout(() => { done(); reject(new Error("timeout")); }, 15000);
+    window[cb] = data => { done(); resolve(data); };
+    s.onerror = () => { done(); reject(new Error("network")); };
+    s.src = url + "&callback=" + cb;
+    document.head.appendChild(s);
+  });
+}
+async function fetchArtist(name) {
+  if (cache[name]) return cache[name];
+  const url = "https://itunes.apple.com/search?" + new URLSearchParams({
+    term: name, entity: "song", attribute: "artistTerm", limit: 200, country: "US"
+  });
+  const data = await jsonp(url);
+  const key = name.toLowerCase();
+  const tracks = data.results.filter(r =>
+    r.previewUrl && r.artistName && r.artistName.toLowerCase().includes(key) &&
+    !/instrumental|karaoke|commentary|spoken|interview|acapella|a cappella/i.test(r.trackName + " " + (r.collectionName || ""))
+  ).map(r => ({
+    title: r.trackName, base: baseTitle(r.trackName), key: norm(r.trackName),
+    artist: r.artistName, year: +r.releaseDate.slice(0, 4), preview: r.previewUrl,
+    art: (r.artworkUrl100 || "").replace("100x100", "300x300"), link: r.trackViewUrl,
+    album: r.collectionName, live: /live/i.test(r.trackName)
+  }));
+  cache[name] = tracks;
+  return tracks;
+}
+
+async function buildPool() {
+  const chosen = artists.filter(a => a.on).map(a => a.name);
+  setPlayable(false);
+  if (!chosen.length) { pool = []; status("Pick at least one artist below.", true); $("poolInfo").textContent = ""; return; }
+  status(`Gathering songs from ${chosen.length} artist${chosen.length > 1 ? "s" : ""}…`);
+  const failed = [];
+  const queue = [...chosen];
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (queue.length) {
+      const n = queue.shift();
+      try { await fetchArtist(n); } catch { failed.push(n); }
+    }
+  }));
+  const [lo, hi] = years;
+  const byKey = new Map();
+  for (const n of chosen) for (const t of cache[n] || []) {
+    if (t.year < lo || t.year > hi || !t.key) continue;
+    const prev = byKey.get(t.key);
+    // keep one version per song: prefer studio over live, then the earliest release
+    if (!prev || (prev.live && !t.live) || (prev.live === t.live && t.year < prev.year)) byKey.set(t.key, t);
+  }
+  pool = [...byKey.values()];
+  renderChips(); renderDiscover();
+  $("poolInfo").textContent = `${pool.length} songs · ${lo}–${hi}` + (failed.length ? ` · couldn't load ${failed.join(", ")}` : "");
+  if (!pool.length) status(`No songs from these artists between ${lo} and ${hi}. Widen the years or add artists.`, true);
+}
+
+/* ---------- game ---------- */
+const audio = $("audio");
+let stopTimer = null, raf = null;
+
+function status(msg, err) { const s = $("status"); s.textContent = msg; s.className = "status" + (err ? " err" : ""); s.hidden = !msg; }
+function setPlayable(on) { ["playBtn", "guess", "submitBtn", "skipBtn"].forEach(id => $(id).disabled = !on); }
+
+function newRound() {
+  stopAudio();
+  $("reveal").hidden = true; $("guessRow").hidden = false;
+  if (!pool.length) return;
+  const fresh = pool.filter(s => !recent.includes(s.key));
+  const pick = (fresh.length ? fresh : pool)[Math.floor(Math.random() * (fresh.length ? fresh.length : pool.length))];
+  recent = [pick.key, ...recent].slice(0, Math.min(60, Math.floor(pool.length * 0.7)));
+  store.set("recent", recent);
+  round = { song: pick, stage: 0, guesses: [], done: false };
+  audio.src = pick.preview; audio.load();
+  $("guess").value = ""; hideSugg();
+  status("Press play, then guess the title. Each skip or wrong guess unlocks more of the song.");
+  setPlayable(true);
+  renderRound();
+}
+
+function renderRound() {
+  const r = round;
+  $("slots").innerHTML = CLIPS.map((c, i) => {
+    const g = r.guesses[i];
+    let cls = "slot", txt = "";
+    if (g) { cls += g.type === "right" ? " right" : g.type === "skip" ? " skipped" : " wrong"; txt = g.type === "skip" ? "skipped" : g.text; }
+    else if (i === r.stage && !r.done) cls += " now";
+    return `<div class="${cls}"><span class="t">${c}s</span><span class="g">${esc(txt)}</span></div>`;
+  }).join("");
+  $("log").innerHTML = r.guesses.filter(g => g.type !== "right").map((g, i) =>
+    `<div><span class="n">${CLIPS[i]}s</span><span class="${g.type === "skip" ? "s" : "x"}">${g.type === "skip" ? "Skipped" : "✕ " + esc(g.text)}</span></div>`).join("");
+  const len = r.done ? MAX : CLIPS[r.stage];
+  $("unlocked").style.width = (len / MAX * 100) + "%";
+  $("clipLen").textContent = r.done ? "Full clip" : `${len}s unlocked`;
+  $("track").querySelectorAll(".tick").forEach(t => t.remove());
+  CLIPS.slice(0, -1).forEach(c => { const t = document.createElement("div"); t.className = "tick"; t.style.left = (c / MAX * 100) + "%"; $("track").appendChild(t); });
+  $("skipBtn").textContent = r.stage < CLIPS.length - 1 ? `Skip +${CLIPS[r.stage + 1] - CLIPS[r.stage]}s` : "Give up";
+}
+
+function stopAudio() {
+  audio.pause(); clearTimeout(stopTimer); cancelAnimationFrame(raf);
+  $("prog").style.width = "0";
+}
+function playFor(seconds) {
+  stopAudio();
+  audio.currentTime = 0;
+  const go = () => audio.play().then(() => {
+    const t0 = performance.now();
+    const tick = () => {
+      const el = Math.min((performance.now() - t0) / 1000, seconds);
+      $("prog").style.width = (el / MAX * 100) + "%";
+      if (el < seconds) raf = requestAnimationFrame(tick);
+    };
+    tick();
+    stopTimer = setTimeout(() => { audio.pause(); cancelAnimationFrame(raf); }, seconds * 1000);
+  }).catch(() => status("Couldn't play that clip. Try Next song.", true));
+  if (audio.readyState >= 3) go();
+  else { audio.addEventListener("canplay", go, { once: true }); }
+}
+$("playBtn").onclick = () => { if (round) playFor(round.done ? 30 : CLIPS[round.stage]); };
+$("fullBtn").onclick = () => playFor(30);
+$("nextBtn").onclick = newRound;
+
+function advance(entry) {
+  round.guesses.push(entry);
+  if (round.stage >= CLIPS.length - 1) return finish(false);
+  round.stage++;
+  renderRound();
+  playFor(CLIPS[round.stage]);
+}
+function submitGuess(text) {
+  if (!round || round.done) return;
+  text = text.trim();
+  if (!text) return;
+  hideSugg(); $("guess").value = "";
+  if (norm(text) === round.song.key) { round.guesses.push({ type: "right", text }); return finish(true); }
+  advance({ type: "wrong", text });
+}
+$("submitBtn").onclick = () => submitGuess(sel >= 0 && suggItems[sel] ? suggItems[sel].base : $("guess").value);
+$("skipBtn").onclick = () => { if (round && !round.done) advance({ type: "skip" }); };
+
+function finish(won) {
+  round.done = true;
+  stats.played++;
+  if (won) { stats.won++; stats.streak++; } else stats.streak = 0;
+  store.set("stats", stats); renderStats();
+  setPlayable(false); $("playBtn").disabled = false;
+  $("guessRow").hidden = true; status("");
+  const s = round.song;
+  $("rvVerdict").textContent = won ? `Got it in ${CLIPS[round.guesses.length - 1]}s` : "Not this time";
+  $("rvVerdict").className = "verdict " + (won ? "win" : "lose");
+  $("rvTitle").textContent = s.title;
+  $("rvMeta").textContent = `${s.artist} · ${s.album} · ${s.year}`;
+  $("rvArt").src = s.art; $("rvArt").alt = s.album + " cover";
+  $("rvLink").href = s.link;
+  $("reveal").hidden = false;
+  renderRound();
+  playFor(30);
+  $("nextBtn").focus();
+}
+function renderStats() { $("stPlayed").textContent = stats.played; $("stWon").textContent = stats.won; $("stStreak").textContent = stats.streak; }
+
+/* ---------- autocomplete ---------- */
+let suggItems = [], sel = -1;
+function hideSugg() { $("sugg").hidden = true; suggItems = []; sel = -1; }
+function showSugg() {
+  const q = norm($("guess").value);
+  if (q.length < 2) return hideSugg();
+  const seen = new Set();
+  suggItems = pool.filter(s => s.key.includes(q) && !seen.has(s.key) && seen.add(s.key))
+    .sort((a, b) => a.key.indexOf(q) - b.key.indexOf(q)).slice(0, 8);
+  sel = -1;
+  if (!suggItems.length) return hideSugg();
+  $("sugg").innerHTML = suggItems.map((s, i) => `<li data-i="${i}">${esc(s.base)}<small>${esc(s.artist)}</small></li>`).join("");
+  $("sugg").hidden = false;
+}
+$("guess").oninput = showSugg;
+$("guess").onkeydown = e => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (!suggItems.length) return;
+    e.preventDefault();
+    sel = (sel + (e.key === "ArrowDown" ? 1 : -1) + suggItems.length) % suggItems.length;
+    [...$("sugg").children].forEach((li, i) => li.classList.toggle("on", i === sel));
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    submitGuess(sel >= 0 ? suggItems[sel].base : $("guess").value);
+  } else if (e.key === "Escape") hideSugg();
+};
+$("sugg").onmousedown = e => {
+  const li = e.target.closest("li"); if (!li) return;
+  e.preventDefault(); submitGuess(suggItems[+li.dataset.i].base);
+};
+$("guess").onblur = () => setTimeout(hideSugg, 100);
+
+/* ---------- boot ---------- */
+renderChips(); renderDiscover(); renderYears(); renderStats();
+buildPool().then(newRound);
+</script>
+</body>
+</html>
