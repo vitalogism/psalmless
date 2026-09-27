@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Psalmless</title>
+<title>Psalmless Hits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -137,6 +137,8 @@ h2 .v { color: var(--rubric); margin-right: .3em; }
 .range input::-webkit-slider-runnable-track { background: none; }
 .range input::-moz-range-track { background: none; }
 .navlink { color: var(--rubric); text-decoration: none; border-bottom: 1px solid currentColor; }
+.popslider { width: 100%; margin: 0; accent-color: var(--rubric); height: 28px; }
+.popscale { margin-top: -4px; }
 .presets { display: flex; flex-wrap: wrap; gap: 6px; }
 .presets button { font: .78rem var(--mono); border: 1px solid var(--rule); background: transparent; border-radius: 3px; padding: 4px 8px; }
 .foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--rule); padding-top: 16px; }
@@ -157,7 +159,7 @@ h2 .v { color: var(--rubric); margin-right: .3em; }
   <header>
     <div>
       <h1><span class="p">P</span>salmless</h1>
-      <div class="tag">Name the worship song from the first second · <a class="navlink" href="popular/">Hits edition</a></div>
+      <div class="tag">Hits edition · <a class="navlink" href="../">Classic game</a></div>
     </div>
     <div class="stats">
       <span>Played <b id="stPlayed">0</b></span>
@@ -224,6 +226,14 @@ h2 .v { color: var(--rubric); margin-right: .3em; }
     </div>
 
     <div class="years">
+      <div class="label"><span>Popularity</span><span id="popShort"></span></div>
+      <div class="yearvals"><span id="popLabel"></span></div>
+      <input type="range" id="pop" class="popslider" min="0" max="4" step="1" aria-label="Popularity filter">
+      <div class="scale popscale"><span>Biggest hits</span><span>Deep cuts</span></div>
+      <p class="hint" id="popDesc"></p>
+    </div>
+
+    <div class="years">
       <div class="label"><span>Release years</span></div>
       <div class="yearvals"><span id="yMinV"></span><span class="dash">to</span><span id="yMaxV"></span></div>
       <div class="range">
@@ -275,7 +285,15 @@ const store = {
 
 let artists = store.get("artists", ARTISTS.map(n => ({ name: n, on: DEFAULT_ON.includes(n) })));
 let years = store.get("years", [1995, THIS_YEAR]);
-let stats = store.get("stats", { played: 0, won: 0, streak: 0 });
+const POP_STEPS = [
+  { n: 3,   short: "Top 3 per artist",   label: "Signature songs", desc: "Only each artist's 3 biggest songs. Most people will know these." },
+  { n: 10,  short: "Top 10 per artist",  label: "Radio hits",      desc: "Each artist's 10 most popular songs." },
+  { n: 25,  short: "Top 25 per artist",  label: "Fan favorites",   desc: "Each artist's 25 most popular songs. For people who know the albums." },
+  { n: 60,  short: "Top 60 per artist",  label: "Deep cuts",       desc: "Each artist's 60 most popular songs, including album tracks." },
+  { n: Infinity, short: "All songs",     label: "Everything",      desc: "Every song Apple Music has a preview for, up to 200 per artist." }
+];
+let popIdx = store.get("pop", 1);
+let stats = store.get("statsHits", { played: 0, won: 0, streak: 0 });
 const cache = {};          // artist name -> tracks[]
 let pool = [];             // deduped playable songs
 let recent = store.get("recent", []);
@@ -418,6 +436,12 @@ function renderDiscover() {
   for (let i = 0; i < Math.min(10, rest.length); i++) addChip($("discover"), rest[(discoverOffset + i) % rest.length]);
 }
 $("shuffleBtn").onclick = () => { discoverOffset += 10; renderDiscover(); };
+function renderPop() {
+  const s = POP_STEPS[popIdx];
+  $("pop").value = popIdx; $("popLabel").textContent = s.label;
+  $("popShort").textContent = s.short; $("popDesc").textContent = s.desc;
+}
+$("pop").oninput = () => { popIdx = +$("pop").value; store.set("pop", popIdx); renderPop(); };
 $("applyBtn").onclick = () => buildPool().then(newRound);
 
 /* ---------- song fetching (iTunes Search API) ---------- */
@@ -442,6 +466,7 @@ async function fetchArtist(name) {
   });
   const data = await jsonp(url);
   const key = name.toLowerCase();
+  // Apple returns songs most-popular first, so each song's position is its popularity rank
   const tracks = data.results.filter(r =>
     r.previewUrl && r.artistName && r.artistName.toLowerCase().includes(key) &&
     !/instrumental|karaoke|commentary|spoken|interview|acapella|a cappella/i.test(r.trackName + " " + (r.collectionName || ""))
@@ -451,6 +476,8 @@ async function fetchArtist(name) {
     art: (r.artworkUrl100 || "").replace("100x100", "300x300"), link: r.trackViewUrl,
     album: r.collectionName, live: /live/i.test(r.trackName)
   }));
+  const seen = new Map();
+  for (const t of tracks) { if (!seen.has(t.key)) seen.set(t.key, seen.size + 1); t.rank = seen.get(t.key); }
   cache[name] = tracks;
   return tracks;
 }
@@ -469,17 +496,19 @@ async function buildPool() {
     }
   }));
   const [lo, hi] = years;
+  const topN = POP_STEPS[popIdx].n;
   const byKey = new Map();
   for (const n of chosen) for (const t of cache[n] || []) {
-    if (t.year < lo || t.year > hi || !t.key) continue;
+    if (t.year < lo || t.year > hi || !t.key || t.rank > topN) continue;
     const prev = byKey.get(t.key);
     // keep one version per song: prefer studio over live, then the earliest release
-    if (!prev || (prev.live && !t.live) || (prev.live === t.live && t.year < prev.year)) byKey.set(t.key, t);
+    if (!prev || (prev.live && !t.live) || (prev.live === t.live && t.year < prev.year)) byKey.set(t.key, { ...t, rank: Math.min(t.rank, prev ? prev.rank : t.rank) });
+    else prev.rank = Math.min(prev.rank, t.rank);
   }
   pool = [...byKey.values()];
   renderChips(); renderDiscover();
-  $("poolInfo").textContent = `${pool.length} songs · ${lo}–${hi}` + (failed.length ? ` · couldn't load ${failed.join(", ")}` : "");
-  if (!pool.length) status(`No songs from these artists between ${lo} and ${hi}. Widen the years or add artists.`, true);
+  $("poolInfo").textContent = `${pool.length} songs · ${POP_STEPS[popIdx].short} · ${lo}–${hi}` + (failed.length ? ` · couldn't load ${failed.join(", ")}` : "");
+  if (!pool.length) status(`No ${POP_STEPS[popIdx].short.toLowerCase()} from these artists between ${lo} and ${hi}. Widen the years, loosen the popularity filter, or add artists.`, true);
 }
 
 /* ---------- game ---------- */
@@ -570,14 +599,14 @@ function finish(won) {
   round.done = true;
   stats.played++;
   if (won) { stats.won++; stats.streak++; } else stats.streak = 0;
-  store.set("stats", stats); renderStats();
+  store.set("statsHits", stats); renderStats();
   setPlayable(false); $("playBtn").disabled = false;
   $("guessRow").hidden = true; status("");
   const s = round.song;
   $("rvVerdict").textContent = won ? `Got it in ${CLIPS[round.guesses.length - 1]}s` : "Not this time";
   $("rvVerdict").className = "verdict " + (won ? "win" : "lose");
   $("rvTitle").textContent = s.title;
-  $("rvMeta").textContent = `${s.artist} · ${s.album} · ${s.year}`;
+  $("rvMeta").textContent = `${s.artist} · ${s.album} · ${s.year} · #${s.rank} most popular`;
   $("rvArt").src = s.art; $("rvArt").alt = s.album + " cover";
   $("rvLink").href = s.link;
   $("reveal").hidden = false;
@@ -620,7 +649,7 @@ $("sugg").onmousedown = e => {
 $("guess").onblur = () => setTimeout(hideSugg, 100);
 
 /* ---------- boot ---------- */
-renderChips(); renderDiscover(); renderYears(); renderStats();
+renderChips(); renderDiscover(); renderPop(); renderYears(); renderStats();
 buildPool().then(newRound);
 </script>
 </body>
