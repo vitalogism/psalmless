@@ -463,10 +463,22 @@ details.more > div { display: grid; gap: 8px; margin-top: 8px; }
 
 /* the challenge card: who set it, how they did, and the songs once you've finished */
 .chal { width: 100%; max-width: 520px; display: grid; gap: 10px; text-align: left; }
+.chal-title { font: 400 clamp(1.5rem, 5vw, 2rem)/1.1 var(--display); margin: 0; text-align: center; text-wrap: balance; }
+.chal-lead { margin: 0; text-align: center; color: var(--muted); font-size: .95rem; max-width: 40ch; justify-self: center; }
+/* with a challenge open, the intro shows only the challenge; survival material stays out of the way */
+.wrap[data-chal="1"] #introLine, .wrap[data-chal="1"] .rules, .wrap[data-chal="1"] .shortrules, .wrap[data-chal="1"] .offices { display: none; }
+.wrap[data-chal="1"] #cellLamps { display: none; }
+.wrap[data-chal="1"] #cellSongs { display: grid; }
+.wrap[data-chal="1"] .cell.gm { display: none !important; }
 .chal .from { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; border: 1px dashed color-mix(in srgb, var(--gold) 60%, transparent); border-radius: 8px; padding: 8px 12px; background: color-mix(in srgb, var(--gold) 6%, transparent); font-size: .9rem; }
 .chal .from .g { font: 1.4rem/1 var(--display); color: var(--gold); }
 .chal .from small { display: block; color: var(--muted); font: .72rem var(--mono); }
-.chal .hym { display: grid; gap: 6px; }
+.chal .mode { text-align: center; }
+.chal #chalStartBtn { justify-self: center; margin-top: 2px; }
+.chal .hym summary { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+/* survival's own Begin button and mode line hide while a challenge is open; the card has its own */
+.wrap[data-chal="1"] #startBtn, .wrap[data-chal="1"] #modeLine { display: none; }
+@media (max-width: 899px) { .wrap[data-chal="1"] .top .tag { display: none; } .wrap[data-chal="1"] #game { padding-top: 14px; } }
 .chips.ro .chip { cursor: default; font-size: .8rem; padding: 2px 9px; min-height: 26px; }
 .share { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; width: 100%; max-width: 520px; }
 .share .link { display: flex; gap: 6px; align-items: center; border: 1px solid var(--rule); border-radius: 8px; background: var(--page); padding: 4px 4px 4px 12px; min-width: 0; }
@@ -535,12 +547,18 @@ html:not([data-game="on"]) .gm { display: none !important; }
         </div>
         <p class="shortrules">Name it from <b>0.5s</b> for <b>1000</b> points. Skips unlock more.</p>
         <div class="chal" id="chalIntro" hidden>
+          <h3 class="chal-title" id="chalTitle">A challenge for you</h3>
+          <p class="chal-lead" id="chalLead"></p>
           <div class="from"><span class="g">✉</span><div><b id="chalFrom"></b><small id="chalFromSub"></small></div></div>
-          <div class="hym" id="chalHym" hidden>
-            <div class="label"><span>Their hymnal</span><button class="linkbtn" id="useHymBtn" type="button">Use it for my runs</button></div>
-            <p class="hint" id="chalHymLine"></p>
-            <div class="chips ro" id="chalArtists"></div>
-          </div>
+          <div class="mode" id="chalMode"></div>
+          <button class="btn gold big" id="chalStartBtn" disabled>Take the challenge</button>
+          <details class="more hym" id="chalHym" hidden>
+            <summary>Their hymnal <span class="hint" id="chalHymLine" style="display:inline;text-transform:none;letter-spacing:0"></span></summary>
+            <div>
+              <div class="chips ro" id="chalArtists"></div>
+              <button class="linkbtn" id="useHymBtn" type="button" style="justify-self:start">Use this hymnal for my own runs</button>
+            </div>
+          </details>
         </div>
         <div class="modes" id="modes">
           <button class="modecard" data-mode="survival" aria-pressed="true"><span class="g">🕯</span><b>Survival</b><span>Play until three lamps go out. Streaks relight them. Ranked in the Book of Life.</span></button>
@@ -1007,8 +1025,10 @@ function renderHud() {
     !run || !score || run.state === "over" ? `Best ${best.toLocaleString()}` :
     score >= best ? "New best!" : `${(best - score + 1).toLocaleString()} to best`;
   const inSet = run && run.mode === "set";
-  $("cellLamps").hidden = !!inSet; $("cellSongs").hidden = !inSet;
+  $("wrap").dataset.chal = chal || inSet ? "1" : "";
+  $("cellLamps").hidden = !!inSet; $("cellSongs").hidden = !inSet && !chal;
   if (inSet) { $("hSongs").textContent = `${Math.min(run.round, run.poolSize)}/${run.poolSize}`; $("hSongsHint").textContent = run.state === "over" ? "finished" : run.round < run.poolSize ? `${run.poolSize - run.round} to go` : "last song"; }
+  else if (chal) { $("hSongs").textContent = chalInfo ? `0/${chalInfo.size}` : "–"; $("hSongsHint").textContent = "challenge"; }
   const lives = run && !inSet ? run.lives : LIVES;
   [...$("lamps").children].forEach((l, i) => {
     const out = i >= lives;
@@ -1261,11 +1281,10 @@ function showPool(p) {
 function renderMode() {
   const p = lastPool;
   if (!p && !chal) { $("modeLine").textContent = "Counting songs…"; return; }
-  if (!p) { $("modeLine").textContent = chalInfo ? `${chalInfo.size} songs, easy to hard` : "Opening the challenge…"; $("startBtn").disabled = !chalInfo; return; }
+  if (!p) { $("chalMode").textContent = chalInfo ? `${chalInfo.size} songs, easy to hard` : "Opening the challenge…"; $("chalStartBtn").disabled = !chalInfo; return; }
   if (chal) {
-    $("startBtn").disabled = !chalInfo;
-    $("modeLine").className = "mode";
-    $("modeLine").innerHTML = chalInfo ? `${chalInfo.size} songs, easy to hard · points <b>×${chalInfo.mult.toFixed(2)}</b>` : "Opening the challenge…";
+    $("chalStartBtn").disabled = !chalInfo;
+    $("chalMode").innerHTML = chalInfo ? `${chalInfo.size} songs, easy to hard · points <b>×${chalInfo.mult.toFixed(2)}</b>` : "Opening the challenge…";
     return;
   }
   const enough = mode === "set" ? p.size >= setSize : p.size > 0;
@@ -1375,7 +1394,7 @@ $("eq").innerHTML = "<i></i>".repeat(10);
 // transient: a player-facing hint that playback may clear (feedback lines stay until the next action)
 function status(msg, err, transient) { const s = $("status"); s.textContent = msg; s.className = "status" + (err ? " err" : ""); s.dataset.t = transient ? "1" : ""; }
 function showPanel(which) {
-  if (which === "intro") { $("gameTitle").textContent = "Listen"; $("roundTag").textContent = ""; }
+  if (which === "intro") { $("gameTitle").textContent = chal ? "Challenge" : "Listen"; $("roundTag").textContent = ""; }
   $("intro").hidden = which !== "intro";
   $("play").hidden = which !== "play";
   $("over").hidden = which !== "over";
@@ -1384,7 +1403,7 @@ function newTally(id) { tally = { id, songs: [], miss: 0 }; store.set("tally", t
 
 async function startRun() {
   if (busy) return;
-  busy = true; $("startBtn").disabled = true; $("applyBtn").disabled = true;
+  busy = true; $("startBtn").disabled = true; $("chalStartBtn").disabled = true; $("applyBtn").disabled = true;
   stopAudio();
   status("Gathering songs…");
   try {
@@ -1409,11 +1428,12 @@ async function startRun() {
   } catch (e) {
     status(e.message, true);
   } finally {
-    busy = false; $("startBtn").disabled = false; $("applyBtn").disabled = false;
+    busy = false; $("startBtn").disabled = false; $("chalStartBtn").disabled = !chalInfo; $("applyBtn").disabled = false;
   }
   renderHud();
 }
 $("startBtn").onclick = startRun;
+$("chalStartBtn").onclick = startRun;
 $("applyBtn").onclick = () => {
   if (run && run.state !== "over" && run.round > 1 && !confirm("Deal new songs? Your current run and its score will end.")) return;
   if (chal) leaveChallenge();
@@ -1435,7 +1455,7 @@ function leaveChallenge() {
   chal = null; chalInfo = null; run = null; store.set("run", null);
   if (location.hash) history.replaceState(null, "", location.pathname + location.search);
   $("chalIntro").hidden = true; $("cellSongs").hidden = true; $("cellLamps").hidden = false;
-  stopAudio(); showPanel("intro"); renderModes(); renderHud();
+  stopAudio(); showPanel("intro"); renderModes(); renderHud(); shown.score = 0; $("hScore").textContent = "0";
   if (!wide.matches) setView("play");
 }
 
@@ -1852,18 +1872,21 @@ async function resume(id) {
 }
 async function openChallenge(id) {
   showPanel("intro");
-  $("chalIntro").hidden = false; $("chalFrom").textContent = "Opening the challenge…"; $("chalFromSub").textContent = "";
-  renderModes();
+  $("chalIntro").hidden = false; $("chalTitle").textContent = "A challenge for you"; $("chalLead").textContent = ""; $("chalFrom").textContent = "Opening the challenge…"; $("chalFromSub").textContent = ""; $("chalHym").hidden = true;
+  $("gameTitle").textContent = "Challenge";
+  renderModes(); renderHud();
   try {
     chalInfo = await api(`/sets/${id}`);
     try { sessionStorage.removeItem("psalmless:reloaded"); } catch {}
     const res = Array.isArray(chalInfo.results) ? chalInfo.results : [], first = res[0];
     const others = res.length > 1 ? ` and ${res.length - 1} other${res.length > 2 ? "s" : ""}` : "";
-    $("chalFrom").textContent = first && first.name ? `${first.name}${others} took this ${chalInfo.size}-song challenge` : `A ${chalInfo.size}-song challenge`;
+    $("chalTitle").textContent = first && first.name ? `${first.name} challenges you` : `A ${chalInfo.size}-song challenge`;
+    $("chalLead").textContent = `Name ${chalInfo.size} worship songs from the first half-second. Miss, and hear a little more.`;
+    $("chalFrom").textContent = first && first.name ? `${first.name}${others} already played it` : "Nobody has played it yet";
     $("chalFromSub").textContent = "Same songs, same order · scores revealed when you finish";
     const st = chalInfo.settings || {};
     if (Array.isArray(st.artists) && Array.isArray(st.years)) {
-      $("chalHymLine").textContent = `${(POP_STEPS[st.pop] || POP_STEPS[DEFAULT_POP]).short} · ${st.years[0]}–${st.years[1]} · ${st.artists.length} artist${st.artists.length === 1 ? "" : "s"}`;
+      $("chalHymLine").textContent = `· ${st.artists.length} artist${st.artists.length === 1 ? "" : "s"} · ${st.years[0]}–${st.years[1]} · ${(POP_STEPS[st.pop] || POP_STEPS[DEFAULT_POP]).short.toLowerCase()}`;
       $("chalArtists").innerHTML = st.artists.map(n => `<span class="chip">${esc(n)}</span>`).join("");
       $("chalHym").hidden = false;
     } else $("chalHym").hidden = true;
@@ -1875,10 +1898,11 @@ async function openChallenge(id) {
       try { sessionStorage.setItem("psalmless:reloaded", "1"); } catch {}
       location.reload(); return;
     }
-    $("chalFrom").textContent = e.status ? e.message : "This challenge couldn't be opened. Try again in a minute.";
+    $("chalTitle").textContent = "This challenge couldn't be opened"; $("chalLead").textContent = "";
+    $("chalFrom").textContent = e.status ? e.message : "Try again in a minute.";
     $("chalFromSub").textContent = "Start a new run instead."; $("chalHym").hidden = true;
     chal = null; history.replaceState(null, "", location.pathname + location.search);
-    setTimeout(() => { $("chalIntro").hidden = true; renderModes(); }, 4000);
+    setTimeout(() => { $("chalIntro").hidden = true; renderModes(); renderHud(); }, 4000);
   }
   renderModes();
 }
