@@ -57,10 +57,10 @@ body {
   background: var(--page); color: var(--ink);
   font: 17px/1.5 var(--body);
   padding: env(safe-area-inset-top, 0px) 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
-  background-image: radial-gradient(ellipse 70% 45% at 50% -8%, var(--glow), transparent 70%);
-  background-attachment: fixed;
   overflow-x: hidden;
 }
+/* the glow lives on its own fixed layer: a fixed background attachment repaints on every scroll frame on phones */
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(ellipse 70% 45% at 50% -8%, var(--glow), transparent 70%); }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; touch-action: manipulation; }
 :focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
@@ -97,8 +97,7 @@ b, strong { font-weight: 700; }
   .top .hud { grid-column: auto; }
 }
 h1 { font: 400 clamp(1.9rem, 6vw, 2.9rem)/1 var(--display); margin: 0; letter-spacing: .01em; white-space: nowrap; }
-h1 .p { color: var(--rubric); display: inline-block; animation: illum 6s ease-in-out infinite; }
-@keyframes illum { 0%, 100% { text-shadow: 0 0 0 transparent; } 50% { text-shadow: 0 0 18px var(--glow); } }
+h1 .p { color: var(--rubric); display: inline-block; text-shadow: 0 0 14px var(--glow); }
 .tag { font: 500 .72rem var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
 @media (max-width: 520px) { .tag { display: none; } }
 .iconbtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule); background: var(--leaf); display: grid; place-items: center; color: var(--muted); transition: color .2s, border-color .2s, transform .12s; }
@@ -109,14 +108,17 @@ h1 .p { color: var(--rubric); display: inline-block; animation: illum 6s ease-in
 .iconbtn[aria-pressed="true"] .off { display: none; }
 
 .hud { display: flex; gap: 6px; align-items: stretch; }
-.cell { flex: 1; min-width: 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--leaf); padding: 5px 8px 6px; display: grid; gap: 2px; align-content: start; text-align: center; }
-@media (min-width: 900px) { .cell { flex: none; min-width: 92px; padding: 5px 12px 6px; } }
+.cell { flex: 1; min-width: 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--leaf); padding: 5px 8px 6px; display: grid; gap: 2px; align-content: start; text-align: center; position: relative; }
+@media (min-width: 900px) { .cell { flex: none; width: 108px; padding: 5px 10px 6px; } }
+/* the rank tile appears once the Record tab has been opened; it slides in rather than snapping */
+.gm.just-on { animation: rise .45s cubic-bezier(.2, 1.2, .4, 1); }
 .cell .k { font: 500 .58rem/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cell .k b { color: var(--flame); font-weight: 500; letter-spacing: 0; }
 @media (max-width: 420px) { .cell .k b { display: none; } }
 .cell .v { font: 500 1.2rem/1.25 var(--mono); font-variant-numeric: tabular-nums; }
 .cell.score .v { color: var(--gold); }
-.tier { height: 4px; border-radius: 2px; background: var(--well); overflow: hidden; }
+/* sits on the tile's bottom edge so the rank tile is the same height as the others */
+.tier { position: absolute; left: 10px; right: 10px; bottom: 3px; height: 3px; border-radius: 2px; background: var(--well); overflow: hidden; }
 .tier i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--rubric)); transition: width .6s cubic-bezier(.3, 1.2, .5, 1); }
 .tl { font: .56rem/1.3 var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .combo { display: flex; gap: 2px; height: 4px; }
@@ -912,7 +914,10 @@ function sfx(kind) {
 }
 $("sfxBtn").onclick = () => { sfxOn = !sfxOn; store.set("sfx", sfxOn); $("sfxBtn").setAttribute("aria-pressed", sfxOn); if (sfxOn) sfx("tick"); };
 $("sfxBtn").setAttribute("aria-pressed", sfxOn);
-function renderGm() { document.documentElement.dataset.game = gmOn ? "on" : "off"; }
+function renderGm(first) {
+  document.documentElement.dataset.game = gmOn ? "on" : "off";
+  if (first) { const els = document.querySelectorAll(".gm"); els.forEach(e => e.classList.add("just-on")); setTimeout(() => els.forEach(e => e.classList.remove("just-on")), 600); }
+}
 function renderModes() {
   document.querySelectorAll(".modecard").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
   $("sizes").hidden = mode !== "set" || !!chal;
@@ -945,8 +950,9 @@ function setView(v) {
   document.querySelectorAll(".nav button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
   document.querySelectorAll(".side-tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
   if (v === "board") { dot("board", false); loadBoard(); }
-  if (v === "record") { dot("record", false); if (!gmOn) { gmOn = true; store.set("gm", true); renderGm(); renderHud(); } renderRecord(); }
-  if (v !== "play" && !wide.matches) window.scrollTo({ top: 0, behavior: "smooth" });
+  if (v === "record") { dot("record", false); if (!gmOn) { gmOn = true; store.set("gm", true); renderGm(true); renderHud(); } renderRecord(); }
+  // the content under the viewport changes completely, so jump rather than animate the scroll
+  if (!wide.matches) window.scrollTo(0, 0);
 }
 document.querySelectorAll(".nav button, .side-tabs button").forEach(b => b.onclick = () => setView(b.dataset.view));
 wide.onchange = () => { if (wide.matches && view === "play") setView("hymnal"); if (!wide.matches && view === "hymnal" && run && run.state !== "over") setView("play"); };
