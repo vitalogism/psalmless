@@ -6,3 +6,6 @@ compatibility_date = "2025-09-01"
 binding = "DB"
 database_name = "psalmless"
 database_id = "895e362c-aa8b-4799-b2bb-f7054d8b65d6"
+
+[vars]
+SITE = "https://vitalogism.github.io/psalmless/"

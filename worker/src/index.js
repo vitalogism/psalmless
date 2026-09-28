@@ -426,6 +426,39 @@ async function submitSet(env, run, body) {
   return json({ rank: results.findIndex(r => r.run === run.id) + 1, results });
 }
 
+/* ---------- share links ---------- */
+// A challenge is shared as <worker>/c/<id>. Link crawlers (iMessage, WhatsApp, Slack, X and
+// the rest) get a small page carrying that challenge's Open Graph tags; everyone else is
+// sent straight to the game, which opens the set from the #c- fragment.
+const SITE_DEFAULT = "https://vitalogism.github.io/psalmless/";
+const CRAWLER = /bot|crawl|spider|preview|embed|facebookexternalhit|facebot|twitter|whatsapp|slack|discord|telegram|linkedin|skype|pinterest|snapchat|vkshare|quora|outbrain|ia_archiver/i;
+const hattr = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+async function shareCard(env, req, id) {
+  const site = env.SITE || SITE_DEFAULT;
+  const target = `${site}#c-${id}`;
+  const set = await loadSet(env, id);
+  const ua = req.headers.get("User-Agent") || "";
+  if (!set || !CRAWLER.test(ua)) return Response.redirect(target, 302);
+  const st = JSON.parse(set.settings);
+  const results = await setResults(env, id);
+  const first = results[0];
+  const artists = st.artists.slice(0, 3).join(", ") + (st.artists.length > 3 ? ` and ${st.artists.length - 3} more` : "");
+  const title = first ? `${first.name} sent you a ${set.size}-song Psalmless challenge` : `A ${set.size}-song Psalmless challenge`;
+  const desc = `Name ${set.size} worship songs from the first half-second. ${artists} · ${st.years[0]}–${st.years[1]}.` +
+    (results.length > 1 ? ` ${results.length} have played.` : "") + " Same songs, same order. Scores revealed when you finish.";
+  const image = new URL("og-challenge.png", site).href;
+  const self = new URL(req.url).origin + "/c/" + id;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${hattr(title)}</title><meta name="description" content="${hattr(desc)}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Psalmless">
+<meta property="og:title" content="${hattr(title)}"><meta property="og:description" content="${hattr(desc)}"><meta property="og:url" content="${hattr(self)}">
+<meta property="og:image" content="${hattr(image)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Psalmless challenge">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${hattr(title)}"><meta name="twitter:description" content="${hattr(desc)}"><meta name="twitter:image" content="${hattr(image)}">
+<meta http-equiv="refresh" content="0; url=${hattr(target)}">
+</head><body style="font-family:sans-serif;padding:24px"><p><a href="${hattr(target)}">Open the challenge</a></p><script>location.replace(${JSON.stringify(target)})</script></body></html>`;
+  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=300" } });
+}
+
 /* ---------- router ---------- */
 export default {
   async fetch(req, env, ctx) {
@@ -434,6 +467,7 @@ export default {
     const parts = url.pathname.replace(/^\/api\/?/, "").split("/").filter(Boolean);
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     try {
+      if (parts[0] === "c" && parts[1] && req.method === "GET") return shareCard(env, req, parts[1]);
       if (parts[0] === "pool" && req.method === "POST") {
         const s = readSettings(body);
         const { pool, counts, missing, stale, mult } = await buildPool(env, s);

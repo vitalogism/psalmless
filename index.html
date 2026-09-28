@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Psalmless</title>
 <meta name="description" content="Name the worship song from the first half-second. Climb the global leaderboard.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Psalmless">
+<meta property="og:title" content="Psalmless">
+<meta property="og:description" content="Name the worship song from the first half-second. Three lamps, a global leaderboard, and challenges to send to friends.">
+<meta property="og:url" content="https://vitalogism.github.io/psalmless/">
+<meta property="og:image" content="https://vitalogism.github.io/psalmless/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Psalmless: name the worship song from the first half-second">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Psalmless">
+<meta name="twitter:description" content="Name the worship song from the first half-second. Three lamps, a global leaderboard, and challenges to send to friends.">
+<meta name="twitter:image" content="https://vitalogism.github.io/psalmless/og.png">
 <meta name="theme-color" content="#E8EAE3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#13151B" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ctext x=%2216%22 y=%2226%22 font-size=%2228%22 text-anchor=%22middle%22 font-family=%22Georgia%22 fill=%22%23B3261E%22%3EP%3C/text%3E%3C/svg%3E">
@@ -1686,7 +1699,8 @@ function showOver() {
 const stripHTML = (d, cls = "") => `<div class="strip ${cls}">${d.map((x, i) => `<i class="${x.w ? "w" + (x.s === 0 ? " h" : "") : "l"}" style="animation-delay:${i * 40}ms">${x.w ? CLIPS[x.s] < 1 ? "½" : CLIPS[x.s] : "✕"}</i>`).join("")}</div>`;
 // After a set is recorded: the link to send, everyone who has played it, and the songs
 async function showSetResults(fresh) {
-  const url = `${location.origin}${location.pathname}#c-${run.setId}`;
+  // the worker serves a rich preview for this link, then sends people on to the game
+  const url = `${API.replace(/\/api$/, "")}/c/${run.setId}`;
   $("shareUrl").textContent = url.replace(/^https?:\/\//, "");
   $("share").hidden = !run.submitted;
   $("copyBtn").onclick = async () => {
