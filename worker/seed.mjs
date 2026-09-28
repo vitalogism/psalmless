@@ -19,7 +19,7 @@ const DEFAULT = [
   "Citipointe Worship", "Shane & Shane", "Kristene DiMarco", "Jenn Johnson", "Chandler Moore", "Naomi Raine",
   "Cody Carnes", "Brooke Ligertwood", "Matt Maher", "All Sons & Daughters",
   "Kim Walker-Smith", "Tribl", "Jesus Image", "Worship Central",
-  "Rend Collective", "Austin Stone Worship", "The Belonging Co", "Hope Darst", "Jonathan & Melissa Helser",
+  "Rend Collective", "Austin Stone Worship", "The Belonging Co", "Hope Darst", "Jonathan David Helser & Melissa Helser",
   "Seacoast Worship", "Christ For The Nations Worship", "One Voice"
 ];
 const names = process.argv.length > 3 ? process.argv.slice(3) : DEFAULT;
