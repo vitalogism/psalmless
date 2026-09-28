@@ -668,18 +668,54 @@ function previewPool() {
   previewTimer = setTimeout(async () => {
     const seq = ++previewSeq;
     const s = settings();
-    if (!s.artists.length) { showPool({ size: 0, mult: 0, counts: {}, failed: [], minRanked: 15 }); return; }
+    if (!s.artists.length) { showPool({ size: 0, mult: 0, counts: {}, missing: [], minRanked: 15 }); return; }
     try {
-      const p = await api("/pool", s);
-      if (seq === previewSeq) showPool(p);
+      let p = await api("/pool", s);
+      if (seq !== previewSeq) return;
+      showPool(p);
+      if (p.missing.length || p.stale.length) {
+        await teach([...p.missing, ...p.stale]);
+        if (seq !== previewSeq) return;
+        p = await api("/pool", s);
+        if (seq === previewSeq) showPool(p);
+      }
     } catch (e) { if (seq === previewSeq) $("poolInfo").textContent = e.message; }
   }, 450);
+}
+// The server can't search Apple itself (Apple rate-limits Cloudflare), so the browser
+// searches and hands over track IDs. The server re-checks every one with Apple.
+const teaching = new Map(), failedArtists = new Set();
+function teachOne(name) {
+  if (!teaching.has(name)) teaching.set(name, (async () => {
+    try {
+      const data = await jsonp("https://itunes.apple.com/search?" + new URLSearchParams({ term: name, entity: "song", attribute: "artistTerm", limit: 200, country: "US" }));
+      const tracks = data.results.filter(r => r.previewUrl && (r.artistName || "").toLowerCase().includes(name.toLowerCase()))
+        .map(r => [r.trackId, (r.artworkUrl100 || "").replace("100x100", "300x300")]);
+      if (!tracks.length) { failedArtists.add(name); return; }
+      await api("/artists", { name, tracks });
+      failedArtists.delete(name);
+    } catch { failedArtists.add(name); teaching.delete(name); }
+  })());
+  return teaching.get(name);
+}
+async function teach(names) {
+  const todo = [...new Set(names)], total = todo.length;
+  let done = 0;
+  const tick = () => $("poolInfo").textContent = `Loading artists… ${done}/${total}`;
+  tick();
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (todo.length) { await teachOne(todo.shift()); done++; tick(); }
+  }));
 }
 let lastPool = null;
 function showPool(p) {
   lastPool = p;
   poolCounts = p.counts; renderChips(); renderDiscover();
-  $("poolInfo").textContent = `${p.size} songs · ${POP_STEPS[popIdx].short} · ${years[0]}–${years[1]}` + (p.failed.length ? ` · couldn't load ${p.failed.join(", ")}` : "");
+  const missing = p.missing.filter(n => failedArtists.has(n));
+  const loading = p.missing.filter(n => !failedArtists.has(n));
+  $("poolInfo").textContent = `${p.size} songs · ${POP_STEPS[popIdx].short} · ${years[0]}–${years[1]}` +
+    (loading.length ? ` · loading ${loading.length} more artist${loading.length > 1 ? "s" : ""}…` : "") +
+    (missing.length ? ` · no songs found for ${missing.join(", ")}` : "");
   $("multTag").textContent = p.mult ? "×" + p.mult.toFixed(2) : "Practice";
   $("multTag").classList.toggle("off", !p.mult);
   $("multMeter").style.width = (p.mult / 2 * 100) + "%";
@@ -805,6 +841,10 @@ async function startRun() {
   stopAudio();
   status("Gathering songs…");
   try {
+    if (lastPool && lastPool.missing.some(n => !failedArtists.has(n))) {
+      status("Loading artists…");
+      await teach(lastPool.missing);
+    }
     const r = await api("/runs", settings());
     titles = r.titles; poolCounts = r.counts;
     delete r.titles; delete r.counts;
