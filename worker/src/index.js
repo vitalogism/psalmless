@@ -391,13 +391,15 @@ async function getSet(env, id, url) {
   if (!set) return fail("That challenge link doesn't exist or has expired.", 404);
   const songs = JSON.parse(set.songs);
   const out = { id: set.id, size: set.size, mult: set.mult, plays: set.plays, creator: set.creator, created: set.created,
-    settings: JSON.parse(set.settings), results: await setResults(env, id) };
-  // song titles are only revealed to someone who has finished the set
+    settings: JSON.parse(set.settings) };
+  // scores and song titles are only revealed to someone who has finished the set;
+  // before that, a player learns only who has played it
   const runId = url.searchParams.get("run");
-  if (runId) {
-    const run = await loadRun(env, runId);
-    if (run && run.set_id === id && run.state === "over") out.songs = songs.map(reveal);
-  }
+  const run = runId ? await loadRun(env, runId) : null;
+  const finished = !!(run && run.set_id === id && run.state === "over");
+  const results = await setResults(env, id);
+  out.results = finished ? results : results.map(r => ({ run: r.run, name: r.name, created: r.created }));
+  if (finished) out.songs = songs.map(reveal);
   return json(out);
 }
 async function startSetRun(env, setId) {

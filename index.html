@@ -478,13 +478,8 @@ details.more > div { display: grid; gap: 8px; margin-top: 8px; }
 .strip.mini i { width: 14px; height: 14px; font-size: .48rem; }
 
 /* opt-in gamification: hide the extras until switched on */
+/* rank, offices and XP stay off the front page until the Record tab has been opened */
 html:not([data-game="on"]) .gm { display: none !important; }
-.toggle { display: inline-flex; align-items: center; gap: 8px; font: 500 .68rem var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: none; border: 0; padding: 0; }
-.toggle i { width: 34px; height: 20px; border-radius: 10px; background: var(--well); border: 1px solid var(--rule); position: relative; transition: background .2s; }
-.toggle i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--leaf); box-shadow: 0 1px 3px var(--shadow); transition: transform .2s; }
-.toggle[aria-pressed="true"] i { background: var(--gold); border-color: var(--gold); }
-.toggle[aria-pressed="true"] i::after { transform: translateX(14px); }
-.toggle[aria-pressed="true"] { color: var(--ink); }
 .foot-note { font-size: .8rem; color: var(--muted); margin: 0; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; } .toast { animation: none; } }
@@ -536,7 +531,6 @@ html:not([data-game="on"]) .gm { display: none !important; }
         </div>
         <div class="mode" id="modeLine"></div>
         <button class="btn gold big" id="startBtn" disabled>Begin</button>
-        <button class="toggle" id="gmToggle" aria-pressed="false"><i></i>Ranks, offices &amp; badges</button>
       </div>
 
       <div id="play" hidden>
@@ -618,7 +612,7 @@ html:not([data-game="on"]) .gm { display: none !important; }
       <div class="side-tabs" role="tablist">
         <button data-view="hymnal" aria-pressed="true"><span class="g">℟</span>Hymnal</button>
         <button data-view="board" aria-pressed="false"><span class="g">✠</span>Book of Life<span class="dot" data-dot="board" hidden></span></button>
-        <button data-view="record" aria-pressed="false" class="gm"><span class="g">♔</span>Record<span class="dot" data-dot="record" hidden></span></button>
+        <button data-view="record" aria-pressed="false"><span class="g">♔</span>Record<span class="dot" data-dot="record" hidden></span></button>
       </div>
 
       <section class="leaf panel" data-panel="hymnal" id="settings">
@@ -692,7 +686,7 @@ html:not([data-game="on"]) .gm { display: none !important; }
         <p class="empty" id="boardEmpty" hidden>No names written yet. Be the first.</p>
       </section>
 
-      <section class="leaf panel gm" data-panel="record" id="recordBox">
+      <section class="leaf panel" data-panel="record" id="recordBox">
         <h2><span><span class="v">♔</span>Your record</span><small id="recDays"></small></h2>
         <div class="level">
           <div class="sigil" id="lvSigil">I</div>
@@ -720,7 +714,7 @@ html:not([data-game="on"]) .gm { display: none !important; }
   <button data-view="play" aria-pressed="true"><span class="g">℣</span>Play</button>
   <button data-view="hymnal" aria-pressed="false"><span class="g">℟</span>Hymnal</button>
   <button data-view="board" aria-pressed="false"><span class="g">✠</span>Book<span class="dot" data-dot="board" hidden></span></button>
-  <button data-view="record" aria-pressed="false" class="gm"><span class="g">♔</span>Record<span class="dot" data-dot="record" hidden></span></button>
+  <button data-view="record" aria-pressed="false"><span class="g">♔</span>Record<span class="dot" data-dot="record" hidden></span></button>
 </nav>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
@@ -856,7 +850,7 @@ let popIdx = store.get("pop2", DEFAULT_POP);
 let best = store.get("best", 0);
 let myName = store.get("name", "");
 let sfxOn = store.get("sfx", true);
-let gmOn = store.get("gm", false);           // ranks, offices and badges are opt-in
+let gmOn = store.get("gm", false);           // true once the Record tab has been opened; then rank extras show on the front page too
 let mode = store.get("mode", "survival");    // survival | set
 let setSize = store.get("setSize", 5);
 const SET_SIZES = [5, 10, 15, 20];
@@ -911,12 +905,7 @@ function sfx(kind) {
 }
 $("sfxBtn").onclick = () => { sfxOn = !sfxOn; store.set("sfx", sfxOn); $("sfxBtn").setAttribute("aria-pressed", sfxOn); if (sfxOn) sfx("tick"); };
 $("sfxBtn").setAttribute("aria-pressed", sfxOn);
-function renderGm() {
-  document.documentElement.dataset.game = gmOn ? "on" : "off";
-  $("gmToggle").setAttribute("aria-pressed", gmOn);
-  if (!gmOn && view === "record") setView(wide.matches ? "hymnal" : "play");
-}
-$("gmToggle").onclick = () => { gmOn = !gmOn; store.set("gm", gmOn); sfx("tick"); renderGm(); if (gmOn) { renderRecord(); renderHud(); toast("♔", "Ranks, offices and badges are on", "Progress is kept in this browser", "", 3000); } };
+function renderGm() { document.documentElement.dataset.game = gmOn ? "on" : "off"; }
 function renderModes() {
   document.querySelectorAll(".modecard").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
   $("sizes").hidden = mode !== "set" || !!chal;
@@ -949,7 +938,7 @@ function setView(v) {
   document.querySelectorAll(".nav button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
   document.querySelectorAll(".side-tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
   if (v === "board") { dot("board", false); loadBoard(); }
-  if (v === "record") { dot("record", false); renderRecord(); }
+  if (v === "record") { dot("record", false); if (!gmOn) { gmOn = true; store.set("gm", true); renderGm(); renderHud(); } renderRecord(); }
   if (v !== "play" && !wide.matches) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 document.querySelectorAll(".nav button, .side-tabs button").forEach(b => b.onclick = () => setView(b.dataset.view));
@@ -987,8 +976,8 @@ function renderHud() {
   $("hBonus").textContent = bonus ? `+${bonus}%` : "";
   [...$("combo").children].forEach((i, k) => { i.classList.toggle("on", k < streak); i.classList.toggle("max", streak >= 10); });
   // chase: how far to your best, or past it
-  const top = chalInfo && chalInfo.results && chalInfo.results[0];
-  $("hChase").textContent = (run && run.mode === "set") || (!run && chal) ? (top ? (score > top.score ? `Past ${top.name}` : `Beat ${top.score.toLocaleString()}`) : "Set the bar") :
+  const rivals = chalInfo && chalInfo.results ? chalInfo.results.length : 0;
+  $("hChase").textContent = (run && run.mode === "set") || (!run && chal) ? (rivals ? `${rivals} to beat` : "Set the bar") :
     !run || !score || run.state === "over" ? `Best ${best.toLocaleString()}` :
     score >= best ? "New best!" : `${(best - score + 1).toLocaleString()} to best`;
   const inSet = run && run.mode === "set";
@@ -1059,7 +1048,6 @@ function officeProgress(o) {
 }
 // Feed an event into today's offices. Counters: correct, fast, stage0, runs, inscribed accumulate; streak, run take the max.
 function officeEvent(k, v = 1) {
-  if (!gmOn) return;
   ensureDaily();
   const p = daily.prog;
   p[k] = k === "streak" || k === "run" ? Math.max(p[k] || 0, v) : (p[k] || 0) + v;
@@ -1068,8 +1056,8 @@ function officeEvent(k, v = 1) {
     const o = OFFICES.find(x => x.id === id);
     if (daily.done.includes(id) || officeProgress(o) < o.n) continue;
     daily.done.push(id); gained += o.xp;
-    setTimeout(() => { toast("✓", `Office kept: ${o.t}`, `+${o.xp} XP`, "good"); sfx("badge"); }, 700);
-    if (daily.done.length === 3) setTimeout(() => toast("✠", "All three offices kept today", "+100 XP", "good", 4000), 1600), gained += 100;
+    if (gmOn) setTimeout(() => { toast("✓", `Office kept: ${o.t}`, `+${o.xp} XP`, "good"); sfx("badge"); }, 700);
+    if (daily.done.length === 3) { if (gmOn) setTimeout(() => toast("✠", "All three offices kept today", "+100 XP", "good", 4000), 1600); gained += 100; }
   }
   store.set("daily", daily);
   if (gained) addXp(gained);
@@ -1090,19 +1078,17 @@ function renderQuests(pulse) {
 }
 function saveProf() { prof.days = prof.dayList.length; store.set("prof", prof); }
 function addXp(n) {
-  if (!gmOn) return;
   const before = levelOf(prof.xp);
   prof.xp += n; saveProf();
   const after = levelOf(prof.xp);
-  if (after.i > before.i) setTimeout(() => { toast(after.num, `Rank ${after.num}: ${after.name}`, "New rank", "", 4200); sfx("fanfare"); sparks($("hLevel"), 30); dot("record", true); }, 1200);
+  if (after.i > before.i) setTimeout(() => { if (gmOn) { toast(after.num, `Rank ${after.num}: ${after.name}`, "New rank", "", 4200); sfx("fanfare"); sparks($("hLevel"), 30); } dot("record", true); }, 1200);
   renderHud();
 }
 function checkBadges() {
-  if (!gmOn) return;
   const fresh = BADGES.filter(b => !prof.badges.includes(b.id) && b.t(prof));
   fresh.forEach((b, i) => {
     prof.badges.push(b.id);
-    setTimeout(() => { toast(b.g, `Badge: ${b.n}`, "+50 XP", "fire", 3600); sfx("badge"); dot("record", true); }, 1500 + i * 900);
+    setTimeout(() => { if (gmOn) { toast(b.g, `Badge: ${b.n}`, "+50 XP", "fire", 3600); sfx("badge"); } dot("record", true); }, 1500 + i * 900);
   });
   if (fresh.length) { prof.newBadges = fresh.map(b => b.id); addXp(fresh.length * 50); saveProf(); }
 }
@@ -1387,7 +1373,7 @@ async function startRun() {
     titles = r.titles; if (Object.keys(r.counts || {}).length) poolCounts = r.counts;
     delete r.titles; delete r.counts;
     run = r; shown.score = 0;
-    store.set("run", run.id);
+    store.set("run", run.id); store.set("runSet", r.mode === "set" ? r.setId : null);
     newTally(run.id);
     markDay();
     renderChips(); renderDiscover();
@@ -1627,7 +1613,8 @@ function showReveal(before) {
 }
 function showOver() {
   stopAudio();
-  store.set("run", null);
+  // a finished challenge stays put so reopening its link shows the reckoning; survival runs clear
+  if (run.mode !== "set") store.set("run", null);
   showPanel("over");
   status("");
   $("gameTitle").textContent = "The reckoning";
@@ -1646,19 +1633,19 @@ function showOver() {
   $("nameForm").hidden = !canSubmit;
   $("nameForm").querySelector("button").textContent = inSet ? "Record & share" : "Inscribe";
   $("nameInput").placeholder = inSet ? "Your name, so friends know who to beat" : "Your name for the Book of Life";
-  $("overStatus").textContent = inSet ? (run.submitted ? "" : "Record your result to get a link friends can play.") :
+  $("overStatus").textContent = inSet ? (run.submitted ? "" : "Add your name to record this and get the link.") :
     !run.ranked ? "Practice runs aren't ranked. Choose more songs to compete." :
     run.score <= 0 ? "No points this time. The last shall be first." : run.submitted ? "Already inscribed." : "";
   $("nameInput").value = myName;
   if (canSubmit) setTimeout(() => $("nameInput").focus({ preventScroll: true }), 300);
-  if (inSet && run.submitted) showSetResults();
+  if (inSet) showSetResults();
   // rewards, once per run
   const rw = [];
   if (tally && tally.id === run.id && !tally.closed) {
     tally.closed = true; store.set("tally", tally);
     prof.runs++; officeEvent("runs");
     const xp = 25 + Math.round(run.score / 100);
-    addXp(xp); if (gmOn) rw.push(["gold", `+${xp} XP`]);
+    addXp(xp); rw.push(["gold gm", `+${xp} XP`]);
     if (run.poolSize >= 200) prof.bigPool++;
     if (songs.length >= 10 && !tally.miss) prof.spotless++;
     if (inSet) { if (run.correct === run.poolSize) { rw.push(["good", "Every song named"]); sfx("fanfare"); } }
@@ -1668,7 +1655,7 @@ function showOver() {
     saveProf(); checkBadges();
     dot("board", true);
   }
-  if (!rw.length && gmOn) rw.push(["", `Rank ${levelOf(prof.xp).num} · ${prof.xp.toLocaleString()} XP`]);
+  if (!rw.length) rw.push(["gm", `Rank ${levelOf(prof.xp).num} · ${prof.xp.toLocaleString()} XP`]);
   $("rewards").innerHTML = rw.map(([c, t], i) => `<span class="pill ${c}" style="animation-delay:${300 + i * 120}ms">${esc(t)}</span>`).join("");
   if (run.score >= 5000) { sparks($("overScore"), 50); } else sfx("over");
   if (!inSet) loadBoard();
@@ -1678,7 +1665,7 @@ const stripHTML = (d, cls = "") => `<div class="strip ${cls}">${d.map((x, i) => 
 async function showSetResults(fresh) {
   const url = `${location.origin}${location.pathname}#c-${run.setId}`;
   $("shareUrl").textContent = url.replace(/^https?:\/\//, "");
-  $("share").hidden = false;
+  $("share").hidden = !run.submitted;
   $("copyBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(url); $("copyBtn").textContent = "Copied"; $("copyBtn").classList.add("copied"); sfx("tick"); }
     catch { const r = document.createRange(); r.selectNodeContents($("shareUrl")); getSelection().removeAllRanges(); getSelection().addRange(r); $("copyBtn").textContent = "Select & copy"; }
@@ -1687,12 +1674,14 @@ async function showSetResults(fresh) {
   if (navigator.share) { $("shareBtn").hidden = false; $("shareBtn").onclick = () => navigator.share({ title: "Psalmless challenge", text: `I scored ${run.score.toLocaleString()} on ${run.poolSize} worship songs. Can you beat it?`, url }).catch(() => {}); }
   try {
     const info = fresh || await api(`/sets/${run.setId}?run=${run.id}`);
-    const res = info.results || [];
+    let res = (info.results || []).filter(r => typeof r.score === "number");
+    // until you record, you appear as an unnamed row so you can see where you'd land
+    if (!run.submitted) res = [...res, { run: run.id, name: "You", score: run.score, detail: run.history || [], pending: true }].sort((a, b) => b.score - a.score);
     $("shareSub").textContent = res.length > 1 ? `${res.length} have played` : "You're the first";
-    $("compare").innerHTML = res.map((r, i) => `<li class="${r.run === run.id ? "me" : ""}" style="animation-delay:${i * 40}ms"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.run === run.id ? "<small>you</small>" : ""}</span><span class="sc">${r.score.toLocaleString()}</span>${stripHTML(r.detail, "mini")}</li>`).join("");
+    $("compare").innerHTML = res.map((r, i) => `<li class="${r.run === run.id ? "me" : ""}" style="animation-delay:${i * 40}ms"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.run === run.id && !r.pending ? "<small>you</small>" : ""}</span><span class="sc">${r.score.toLocaleString()}</span>${stripHTML(r.detail, "mini")}</li>`).join("");
     $("compare").hidden = !res.length;
     if (info.songs) {
-      const mine = res.find(r => r.run === run.id), d = mine ? mine.detail : [];
+      const d = run.history || [];
       $("songlist").innerHTML = info.songs.map((sg, i) => `<li><img src="${esc(sg.art)}" alt=""><span class="t">${esc(sg.title)}<small>${esc(sg.artist)} · ${sg.year}</small></span><span class="r ${d[i] ? d[i].w ? "w" : "l" : ""}">${d[i] ? d[i].w ? `${CLIPS[d[i].s]}s · +${d[i].p.toLocaleString()}` : "missed" : ""}</span></li>`).join("");
       $("songsBox").hidden = false;
     }
@@ -1713,6 +1702,7 @@ $("nameForm").onsubmit = async e => {
       $("overStatus").textContent = n === 1 ? "Recorded. Send the link and see how your friends do." : `Recorded: #${r.rank} of ${n} who have played this set.`;
       sparks($("overScore"), 30); sfx("fanfare");
       showSetResults({ results: r.results, songs: (await api(`/sets/${run.setId}?run=${run.id}`)).songs });
+      if (r.rank === 1 && n > 1) toast("♔", `Top of this challenge`, `#1 of ${n}`, "", 3500);
       return;
     }
     $("overStatus").innerHTML = `Written in the Book of Life at <b>#${r.rank}</b>. ${verseHTML(V.board)}`;
@@ -1812,7 +1802,7 @@ async function resume(id) {
     titles = r.titles; delete r.titles;
     run = r; shown.score = r.score;
     if (!tally || tally.id !== id) newTally(id);
-    if (r.mode === "set") chal = r.setId;
+    if (r.mode === "set") { chal = r.setId; if (!chalInfo) api(`/sets/${chal}`).then(i => { chalInfo = i; renderHud(); }).catch(() => {}); }
     renderHud();
     if (r.state === "over") { showOver(); return; }
     showPanel("play");
@@ -1829,9 +1819,10 @@ async function openChallenge(id) {
   renderModes();
   try {
     chalInfo = await api(`/sets/${id}`);
-    const res = chalInfo.results || [], top = res[0];
-    $("chalFrom").textContent = top ? `${top.name} scored ${top.score.toLocaleString()} on ${chalInfo.size} songs` : `A ${chalInfo.size}-song challenge`;
-    $("chalFromSub").textContent = (res.length > 1 ? `${res.length} have played · ` : "") + `${chalInfo.settings.artists.length} artists · ${chalInfo.settings.years[0]}–${chalInfo.settings.years[1]} · same songs, same order`;
+    const res = chalInfo.results || [], first = res[0];
+    const others = res.length > 1 ? ` and ${res.length - 1} other${res.length > 2 ? "s" : ""}` : "";
+    $("chalFrom").textContent = first ? `${first.name}${others} took this ${chalInfo.size}-song challenge` : `A ${chalInfo.size}-song challenge`;
+    $("chalFromSub").textContent = `${chalInfo.settings.artists.length} artists · ${chalInfo.settings.years[0]}–${chalInfo.settings.years[1]} · same songs, same order · scores revealed when you finish`;
     renderHud();
   } catch (e) {
     $("chalFrom").textContent = e.message; $("chalFromSub").textContent = "Start a new run instead.";
@@ -1847,7 +1838,9 @@ renderChips(); renderDiscover(); renderPop(); renderYears(); renderHud(); render
 setView(wide.matches ? "hymnal" : "play");
 previewPool(); loadBoard();
 const saved = store.get("run", null);
-if (chal) { store.set("run", null); openChallenge(chal); }
+const savedSet = store.get("runSet", null);
+if (chal && saved && savedSet === chal) resume(saved);
+else if (chal) { store.set("run", null); openChallenge(chal); }
 else if (saved) resume(saved); else showPanel("intro");
 window.addEventListener("hashchange", () => { const c = (location.hash.match(/^#c-([a-z0-9]{8})$/) || [])[1]; if (c && c !== chal) { chal = c; chalInfo = null; stopAudio(); run = null; shown.score = 0; store.set("run", null); renderHud(); openChallenge(c); if (!wide.matches) setView("play"); } });
 </script>
