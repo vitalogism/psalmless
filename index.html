@@ -451,6 +451,8 @@ details.more > div { display: grid; gap: 8px; margin-top: 8px; }
 .chal .from { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; border: 1px dashed color-mix(in srgb, var(--gold) 60%, transparent); border-radius: 8px; padding: 8px 12px; background: color-mix(in srgb, var(--gold) 6%, transparent); font-size: .9rem; }
 .chal .from .g { font: 1.4rem/1 var(--display); color: var(--gold); }
 .chal .from small { display: block; color: var(--muted); font: .72rem var(--mono); }
+.chal .hym { display: grid; gap: 6px; }
+.chips.ro .chip { cursor: default; font-size: .8rem; padding: 2px 9px; min-height: 26px; }
 .share { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; width: 100%; max-width: 520px; }
 .share .link { display: flex; gap: 6px; align-items: center; border: 1px solid var(--rule); border-radius: 8px; background: var(--page); padding: 4px 4px 4px 12px; min-width: 0; }
 .share .link .btn { flex: none; }
@@ -519,6 +521,11 @@ html:not([data-game="on"]) .gm { display: none !important; }
         <p class="shortrules">Name it from <b>0.5s</b> for <b>1000</b> points. Skips unlock more.</p>
         <div class="chal" id="chalIntro" hidden>
           <div class="from"><span class="g">✉</span><div><b id="chalFrom"></b><small id="chalFromSub"></small></div></div>
+          <div class="hym" id="chalHym" hidden>
+            <div class="label"><span>Their hymnal</span><button class="linkbtn" id="useHymBtn" type="button">Use it for my runs</button></div>
+            <p class="hint" id="chalHymLine"></p>
+            <div class="chips ro" id="chalArtists"></div>
+          </div>
         </div>
         <div class="modes" id="modes">
           <button class="modecard" data-mode="survival" aria-pressed="true"><span class="g">🕯</span><b>Survival</b><span>Play until three lamps go out. Streaks relight them. Ranked in the Book of Life.</span></button>
@@ -1395,6 +1402,16 @@ $("applyBtn").onclick = () => {
 };
 $("againBtn").onclick = () => { if (run && run.mode === "set") { leaveChallenge(); return; } startRun(); };
 $("newSetBtn").onclick = () => { leaveChallenge(); mode = "set"; store.set("mode", mode); renderModes(); };
+$("useHymBtn").onclick = () => {
+  const st = chalInfo && chalInfo.settings; if (!st) return;
+  const want = new Set(st.artists.map(n => n.toLowerCase()));
+  artists.forEach(a => a.on = want.has(a.name.toLowerCase()));
+  for (const n of st.artists) if (!artists.some(a => a.name.toLowerCase() === n.toLowerCase())) artists.push({ name: n, on: true });
+  years = [Math.max(1965, +st.years[0] || 1965), Math.min(THIS_YEAR, +st.years[1] || THIS_YEAR)]; popIdx = POP_STEPS[st.pop] ? st.pop : DEFAULT_POP;
+  $("yMin").value = years[0]; $("yMax").value = years[1];
+  renderYears(); renderPop(); renderChips(); renderDiscover(); saveSettings(); sfx("tick");
+  toast("℟", "Your hymnal now matches this challenge", `${st.artists.length} artists · ${years[0]}–${years[1]}`, "good");
+};
 function leaveChallenge() {
   chal = null; chalInfo = null; run = null; store.set("run", null);
   if (location.hash) history.replaceState(null, "", location.pathname + location.search);
@@ -1819,13 +1836,27 @@ async function openChallenge(id) {
   renderModes();
   try {
     chalInfo = await api(`/sets/${id}`);
-    const res = chalInfo.results || [], first = res[0];
+    try { sessionStorage.removeItem("psalmless:reloaded"); } catch {}
+    const res = Array.isArray(chalInfo.results) ? chalInfo.results : [], first = res[0];
     const others = res.length > 1 ? ` and ${res.length - 1} other${res.length > 2 ? "s" : ""}` : "";
-    $("chalFrom").textContent = first ? `${first.name}${others} took this ${chalInfo.size}-song challenge` : `A ${chalInfo.size}-song challenge`;
-    $("chalFromSub").textContent = `${chalInfo.settings.artists.length} artists · ${chalInfo.settings.years[0]}–${chalInfo.settings.years[1]} · same songs, same order · scores revealed when you finish`;
+    $("chalFrom").textContent = first && first.name ? `${first.name}${others} took this ${chalInfo.size}-song challenge` : `A ${chalInfo.size}-song challenge`;
+    $("chalFromSub").textContent = "Same songs, same order · scores revealed when you finish";
+    const st = chalInfo.settings || {};
+    if (Array.isArray(st.artists) && Array.isArray(st.years)) {
+      $("chalHymLine").textContent = `${(POP_STEPS[st.pop] || POP_STEPS[DEFAULT_POP]).short} · ${st.years[0]}–${st.years[1]} · ${st.artists.length} artist${st.artists.length === 1 ? "" : "s"}`;
+      $("chalArtists").innerHTML = st.artists.map(n => `<span class="chip">${esc(n)}</span>`).join("");
+      $("chalHym").hidden = false;
+    } else $("chalHym").hidden = true;
     renderHud();
   } catch (e) {
-    $("chalFrom").textContent = e.message; $("chalFromSub").textContent = "Start a new run instead.";
+    // an API error explains itself; anything else is most likely a page cached from before
+    // an API change, so fetch a fresh copy once before giving up
+    if (!e.status && !sessionStorage.getItem("psalmless:reloaded")) {
+      try { sessionStorage.setItem("psalmless:reloaded", "1"); } catch {}
+      location.reload(); return;
+    }
+    $("chalFrom").textContent = e.status ? e.message : "This challenge couldn't be opened. Try again in a minute.";
+    $("chalFromSub").textContent = "Start a new run instead."; $("chalHym").hidden = true;
     chal = null; history.replaceState(null, "", location.pathname + location.search);
     setTimeout(() => { $("chalIntro").hidden = true; renderModes(); }, 4000);
   }
