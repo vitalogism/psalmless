@@ -10,6 +10,8 @@ const MAX_ARTISTS = 40;
 const MIN_RANKED_POOL = 15;
 const RUN_TTL = 2 * 86400e3;
 const POP_N = [3, 10, 25, 60, Infinity];
+const SET_SIZES = [5, 10, 15, 20];
+const SET_TTL = 90 * 86400e3;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -174,6 +176,7 @@ function view(run, extra = {}) {
     guesses: JSON.parse(run.guesses), lives: run.lives, streak: run.streak,
     bestStreak: run.best_streak, correct: run.correct, score: run.score,
     mult: run.mult, poolSize: run.pool_size, ranked: run.mult > 0, submitted: !!run.submitted,
+    mode: run.mode || "survival", setId: run.set_id || null, history: JSON.parse(run.history || "[]"),
     last: run.last ? JSON.parse(run.last) : null, ...extra
   };
 }
@@ -186,8 +189,16 @@ async function loadRun(env, id) {
 async function deal(env, run) {
   const pool = JSON.parse(run.pool);
   const used = JSON.parse(run.used);
-  const free = pool.map((_, i) => i).filter(i => !used.includes(i));
   let track;
+  if (run.mode === "set") {
+    // a set's songs are stored in play order and dealt in that order
+    const set = await env.DB.prepare("SELECT songs FROM sets WHERE id = ?").bind(run.set_id).first();
+    if (!set) throw new Error("set missing");
+    track = JSON.parse(set.songs)[used.length];
+    if (!track) throw new Error("no songs left to deal");
+    used.push(used.length);
+  }
+  const free = pool.map((_, i) => i).filter(i => !used.includes(i));
   while (!track && free.length) {
     const pick = free.splice(crypto.getRandomValues(new Uint32Array(1))[0] % free.length, 1)[0];
     used.push(pick);
@@ -203,9 +214,9 @@ async function deal(env, run) {
 async function save(env, run, expect) {
   // expect = {round, stage, state} the change was based on; stops double-submits racing
   const r = await env.DB.prepare(`UPDATE runs SET track=?, used=?, round=?, stage=?, guesses=?, lives=?, streak=?, best_streak=?,
-      correct=?, score=?, last=?, state=?, submitted=? WHERE id=? AND round=? AND stage=? AND state=?`)
+      correct=?, score=?, last=?, state=?, submitted=?, history=? WHERE id=? AND round=? AND stage=? AND state=?`)
     .bind(run.track, run.used, run.round, run.stage, run.guesses, run.lives, run.streak, run.best_streak,
-      run.correct, run.score, run.last, run.state, run.submitted, run.id, expect.round, expect.stage, expect.state).run();
+      run.correct, run.score, run.last, run.state, run.submitted, run.history || "[]", run.id, expect.round, expect.stage, expect.state).run();
   return r.meta.changes === 1;
 }
 
@@ -248,15 +259,21 @@ async function act(env, id, kind, text) {
     if (run.streak % 5 === 0 && run.lives < LIVES) { run.lives += 1; lamp = "refilled"; }
     run.state = "reveal";
   } else if (run.stage >= CLIPS.length - 1) {
-    run.streak = 0; run.lives -= 1; lamp = "out";
-    run.state = run.lives <= 0 ? "over" : "reveal";
+    run.streak = 0;
+    if (run.mode === "set") run.state = "reveal";
+    else { run.lives -= 1; lamp = "out"; run.state = run.lives <= 0 ? "over" : "reveal"; }
   } else {
     run.stage += 1;
   }
   // every song plays once, so a small pool can't be memorized and replayed forever
   if (run.state === "reveal" && run.round >= run.pool_size) run.state = "over";
   const done = run.state !== "play";
-  if (done) run.last = JSON.stringify({ won: result === "right", stage: expect.stage, points, song: reveal(track) });
+  if (done) {
+    run.last = JSON.stringify({ won: result === "right", stage: expect.stage, points, song: reveal(track) });
+    const history = JSON.parse(run.history || "[]");
+    history.push({ w: result === "right", s: expect.stage, p: points });
+    run.history = JSON.stringify(history);
+  }
   if (!(await save(env, run, expect))) return fail("That round already moved on.", 409);
   return json(view(run, { result, points, lamp }));
 }
@@ -301,6 +318,7 @@ async function submit(env, id, body) {
   const run = await loadRun(env, id);
   if (!run) return fail("Run not found.", 404);
   if (run.state !== "over") return fail("Finish the run first.", 409);
+  if (run.mode === "set") return submitSet(env, run, body);
   if (!run.mult) return fail("Practice runs (under " + MIN_RANKED_POOL + " songs) aren't ranked.", 409);
   if (run.submitted) return fail("Already in the Book of Life.", 409);
   if (run.score <= 0) return fail("No score to record.", 409);
@@ -313,6 +331,97 @@ async function submit(env, id, body) {
     .bind(id, name, run.score, run.correct, run.best_streak, run.pool_size, now).run();
   const higher = await env.DB.prepare("SELECT COUNT(*) AS n FROM scores WHERE score > ?").bind(run.score).first();
   return json({ rank: higher.n + 1, top: await leaderboard(env, "all") });
+}
+
+/* ---------- challenge sets ---------- */
+// A set is a fixed list of songs, ordered easy to hard by each song's rank within its
+// artist, so two people who open the same link hear the same songs in the same order.
+function newRun(pool, mult, extra = {}) {
+  return {
+    id: newId(), created: Date.now(), pool: JSON.stringify(pool.map(({ n, t }) => [n, t.id])),
+    pool_size: pool.length, mult, track: null, used: "[]", round: 0, stage: 0, guesses: "[]", lives: LIVES,
+    streak: 0, best_streak: 0, correct: 0, score: 0, last: null, state: "play", submitted: 0,
+    mode: "survival", set_id: null, history: "[]", ...extra
+  };
+}
+async function insertRun(env, run) {
+  await env.DB.prepare(`INSERT INTO runs (id, created, pool, pool_size, mult, track, used, round, stage, guesses, lives, streak,
+      best_streak, correct, score, last, state, submitted, mode, set_id, history) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .bind(run.id, run.created, run.pool, run.pool_size, run.mult, run.track, run.used, run.round, run.stage, run.guesses, run.lives,
+      run.streak, run.best_streak, run.correct, run.score, run.last, run.state, run.submitted, run.mode, run.set_id, run.history).run();
+}
+async function cleanup(env) {
+  await env.DB.prepare("DELETE FROM runs WHERE created < ? AND mode = 'survival'").bind(Date.now() - RUN_TTL).run();
+  // set runs live as long as their set so a finished run's compare page keeps working
+  await env.DB.prepare("DELETE FROM runs WHERE created < ? AND mode = 'set'").bind(Date.now() - SET_TTL).run();
+  await env.DB.prepare("DELETE FROM set_results WHERE created < ?").bind(Date.now() - SET_TTL).run();
+  await env.DB.prepare("DELETE FROM sets WHERE created < ?").bind(Date.now() - SET_TTL).run();
+}
+const shortId = () => { const a = "abcdefghjkmnpqrstuvwxyz23456789", b = crypto.getRandomValues(new Uint8Array(8)); return [...b].map(x => a[x % a.length]).join(""); };
+
+async function createSet(env, body) {
+  const s = readSettings(body);
+  const size = SET_SIZES.includes(+body.size) ? +body.size : SET_SIZES[0];
+  const { pool, mult, missing } = await buildPool(env, s);
+  if (pool.length < size) return fail(`Only ${pool.length} songs match. A set of ${size} needs at least ${size}. Widen the years, loosen popularity, or add artists.`);
+  // spread the draw across artists, then order easy to hard by rank within the artist
+  const byArtist = new Map();
+  for (const e of pool) { if (!byArtist.has(e.n)) byArtist.set(e.n, []); byArtist.get(e.n).push(e); }
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const lists = shuffle([...byArtist.values()].map(shuffle));
+  const chosen = [];
+  for (let k = 0; chosen.length < size; k++) { const l = lists[k % lists.length]; if (l.length) chosen.push(l.pop()); if (!lists.some(x => x.length)) break; }
+  chosen.sort((a, b) => a.t.r - b.t.r || a.t.pop - b.t.pop);
+  const id = shortId();
+  await env.DB.prepare("INSERT INTO sets (id, created, songs, size, mult, pool, settings, creator, plays) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 0)")
+    .bind(id, Date.now(), JSON.stringify(chosen.map(({ t }) => t)), chosen.length, mult, JSON.stringify(pool.map(({ n, t }) => [n, t.id])),
+      JSON.stringify({ artists: s.names, years: [s.lo, s.hi], pop: s.pop })).run();
+  return json({ id, size: chosen.length, mult, missing });
+}
+async function loadSet(env, id) {
+  if (!/^[a-z0-9]{8}$/.test(id)) return null;
+  return env.DB.prepare("SELECT * FROM sets WHERE id = ?").bind(id).first();
+}
+async function setResults(env, id) {
+  const { results } = await env.DB.prepare("SELECT run, name, score, correct, detail, created FROM set_results WHERE set_id = ? ORDER BY score DESC, created ASC LIMIT 50").bind(id).all();
+  return results.map(r => ({ ...r, detail: JSON.parse(r.detail) }));
+}
+async function getSet(env, id, url) {
+  const set = await loadSet(env, id);
+  if (!set) return fail("That challenge link doesn't exist or has expired.", 404);
+  const songs = JSON.parse(set.songs);
+  const out = { id: set.id, size: set.size, mult: set.mult, plays: set.plays, creator: set.creator, created: set.created,
+    settings: JSON.parse(set.settings), results: await setResults(env, id) };
+  // song titles are only revealed to someone who has finished the set
+  const runId = url.searchParams.get("run");
+  if (runId) {
+    const run = await loadRun(env, runId);
+    if (run && run.set_id === id && run.state === "over") out.songs = songs.map(reveal);
+  }
+  return json(out);
+}
+async function startSetRun(env, setId) {
+  const set = await loadSet(env, setId);
+  if (!set) return fail("That challenge link doesn't exist or has expired.", 404);
+  const pool = JSON.parse(set.pool).map(([n, id]) => ({ n, t: { id } }));
+  const run = newRun(pool, set.mult, { mode: "set", set_id: set.id, pool_size: set.size, lives: 99 });
+  await deal(env, run);
+  await insertRun(env, run);
+  await env.DB.prepare("UPDATE sets SET plays = plays + 1 WHERE id = ?").bind(set.id).run();
+  const titles = await titlesFor(env, run);
+  return json(view(run, { titles, counts: {}, missing: [], setSize: set.size }));
+}
+async function submitSet(env, run, body) {
+  if (run.submitted) return fail("Already recorded.", 409);
+  const name = cleanName(body.name);
+  if (!name) return fail("Enter a name.");
+  const upd = await env.DB.prepare("UPDATE runs SET submitted = 1 WHERE id = ? AND submitted = 0").bind(run.id).run();
+  if (upd.meta.changes !== 1) return fail("Already recorded.", 409);
+  await env.DB.prepare("INSERT INTO set_results (run, set_id, name, score, correct, detail, created) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .bind(run.id, run.set_id, name, run.score, run.correct, run.history || "[]", Date.now()).run();
+  await env.DB.prepare("UPDATE sets SET creator = COALESCE(creator, ?) WHERE id = ?").bind(name, run.set_id).run();
+  const results = await setResults(env, run.set_id);
+  return json({ rank: results.findIndex(r => r.run === run.id) + 1, results });
 }
 
 /* ---------- router ---------- */
@@ -334,21 +443,17 @@ export default {
         const tracks = await saveArtist(env, name, body.tracks);
         return json({ name, songs: tracks.length });
       }
+      if (parts[0] === "sets" && parts.length === 1 && req.method === "POST") return createSet(env, body);
+      if (parts[0] === "sets" && parts[1] && req.method === "GET") return getSet(env, parts[1], url);
       if (parts[0] === "runs" && parts.length === 1 && req.method === "POST") {
+        if (typeof body.set === "string") return startSetRun(env, body.set);
         const s = readSettings(body);
         const { pool, counts, missing, mult } = await buildPool(env, s);
         if (!pool.length) return fail("No songs match those settings. Widen the years, loosen popularity, or add artists.");
-        const run = {
-          id: newId(), created: Date.now(), pool: JSON.stringify(pool.map(({ n, t }) => [n, t.id])),
-          pool_size: pool.length, mult, track: null, used: "[]", round: 0, stage: 0, guesses: "[]", lives: LIVES,
-          streak: 0, best_streak: 0, correct: 0, score: 0, last: null, state: "play", submitted: 0
-        };
+        const run = newRun(pool, mult);
         await deal(env, run);
-        await env.DB.prepare(`INSERT INTO runs (id, created, pool, pool_size, mult, track, used, round, stage, guesses, lives, streak,
-            best_streak, correct, score, last, state, submitted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-          .bind(run.id, run.created, run.pool, run.pool_size, run.mult, run.track, run.used, run.round, run.stage, run.guesses, run.lives,
-            run.streak, run.best_streak, run.correct, run.score, run.last, run.state, run.submitted).run();
-        if (Math.random() < 0.05) ctx.waitUntil(env.DB.prepare("DELETE FROM runs WHERE created < ?").bind(Date.now() - RUN_TTL).run());
+        await insertRun(env, run);
+        if (Math.random() < 0.05) ctx.waitUntil(cleanup(env));
         const titles = [...new Map(pool.map(({ t }) => [t.k, [t.b, t.a]])).values()];
         return json(view(run, { titles, counts, missing }));
       }
