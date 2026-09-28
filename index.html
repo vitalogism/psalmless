@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Psalmless</title>
+<meta name="description" content="Name the worship song from the first half-second. Climb the global leaderboard.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ctext x=%2216%22 y=%2226%22 font-size=%2228%22 text-anchor=%22middle%22 font-family=%22Georgia%22 fill=%22%23B3261E%22%3EP%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -19,6 +21,7 @@
   --gold: #A67A1E;
   --good: #2E7D4F;
   --skip: #9AA0AC;
+  --glow: rgb(166 122 30 / .35);
   --display: "IM Fell English SC", "Iowan Old Style", Georgia, serif;
   --body: "Alegreya Sans", "Avenir Next", "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -28,13 +31,13 @@
   :root:not([data-theme="light"]) {
     --page: #13151B; --leaf: #1C1F27; --ink: #E9E7E0; --muted: #9DA2AE;
     --rule: #30343F; --rubric: #E0574B; --rubric-ink: #16090A; --gold: #D6A845;
-    --good: #5CC08A; --skip: #5B606C; color-scheme: dark;
+    --good: #5CC08A; --skip: #5B606C; --glow: rgb(214 168 69 / .28); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --page: #13151B; --leaf: #1C1F27; --ink: #E9E7E0; --muted: #9DA2AE;
   --rule: #30343F; --rubric: #E0574B; --rubric-ink: #16090A; --gold: #D6A845;
-  --good: #5CC08A; --skip: #5B606C; color-scheme: dark;
+  --good: #5CC08A; --skip: #5B606C; --glow: rgb(214 168 69 / .28); color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -43,113 +46,233 @@ html, body { margin: 0; }
 body {
   background: var(--page); color: var(--ink);
   font: 17px/1.5 var(--body);
-  padding: 32px 16px 64px;
+  padding: 20px 16px 48px;
+  background-image: radial-gradient(ellipse 80% 50% at 50% -10%, var(--glow), transparent 70%);
+  background-attachment: fixed;
+  overflow-x: hidden;
 }
-.wrap { max-width: 680px; margin: 0 auto; display: grid; gap: 28px; }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.side { display: grid; gap: 18px; }
+@media (max-width: 880px) { .cols { grid-template-columns: 1fr; } }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
 
-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--rule); padding-bottom: 12px; }
-h1 { font: 400 clamp(2.4rem, 7vw, 3.4rem)/1 var(--display); margin: 0; letter-spacing: .01em; }
-h1 .p { color: var(--rubric); }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
+h1 { font: 400 clamp(2.2rem, 6vw, 3.1rem)/1 var(--display); margin: 0; letter-spacing: .01em; }
+h1 .p { color: var(--rubric); display: inline-block; animation: illum 6s ease-in-out infinite; }
+@keyframes illum { 0%, 100% { text-shadow: 0 0 0 transparent; } 50% { text-shadow: 0 0 18px var(--glow); } }
 .tag { font: 500 .78rem var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
-.stats { display: flex; gap: 18px; font: .8rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.stats b { color: var(--ink); font-weight: 500; }
 
-.leaf { background: var(--leaf); border: 1px solid var(--rule); border-radius: 4px; padding: 24px; display: grid; gap: 20px; }
-h2 { font: 400 1.45rem/1.1 var(--display); margin: 0; }
+.hud { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.hud .cell { border: 1px solid var(--rule); border-radius: 4px; background: var(--leaf); padding: 4px 12px; display: grid; min-width: 74px; text-align: center; }
+.hud .k { font: 500 .62rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.hud .v { font: 500 1.15rem/1.35 var(--mono); font-variant-numeric: tabular-nums; }
+.hud .score .v { color: var(--gold); }
+.lamps { display: flex; gap: 4px; justify-content: center; align-items: center; height: 1.55rem; }
+.lamp { width: 14px; height: 20px; position: relative; transition: opacity .4s, filter .4s; }
+.lamp svg { width: 100%; height: 100%; }
+.lamp.out { opacity: .22; filter: grayscale(1); }
+.lamp:not(.out) .flame { animation: flicker 1.6s ease-in-out infinite; transform-origin: 50% 100%; }
+.lamp:nth-child(2) .flame { animation-delay: -.5s; }
+.lamp:nth-child(3) .flame { animation-delay: -1.1s; }
+@keyframes flicker { 0%, 100% { transform: scale(1, 1); } 30% { transform: scale(.92, 1.08) rotate(-3deg); } 60% { transform: scale(1.05, .95) rotate(2deg); } }
+.lamp.dying { animation: die .8s ease-out; }
+@keyframes die { 0% { transform: scale(1.4); } 40% { transform: scale(1.1) rotate(-8deg); } 100% { transform: none; } }
+.bump { animation: bump .5s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.3); color: var(--gold); } 100% { transform: scale(1); } }
+
+.leaf { background: var(--leaf); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; display: grid; gap: 14px; position: relative; }
+h2 { font: 400 1.35rem/1.1 var(--display); margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 h2 .v { color: var(--rubric); margin-right: .3em; }
+h2 small { font: 500 .72rem var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 
 /* game */
+#game { overflow: hidden; }
+#game.shake { animation: shake .45s; }
+@keyframes shake { 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
+#game.glory { animation: glory 1.2s ease-out; }
+@keyframes glory { 0% { box-shadow: 0 0 0 0 var(--glow); } 30% { box-shadow: 0 0 0 6px var(--glow), 0 0 60px 10px var(--glow); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.rays { position: absolute; inset: -50%; pointer-events: none; opacity: 0; background: repeating-conic-gradient(from 0deg at 50% 50%, var(--glow) 0 6deg, transparent 6deg 18deg); mask: radial-gradient(circle, #000 0, transparent 55%); }
+#game.glory .rays { animation: rays 1.6s ease-out; }
+@keyframes rays { 0% { opacity: 0; transform: rotate(0) scale(.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: rotate(40deg) scale(1.1); } }
+
 .slots { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
-.slot { border: 1px solid var(--rule); border-radius: 3px; min-height: 40px; padding: 6px 10px; display: flex; align-items: center; gap: 8px; font-size: .92rem; overflow: hidden; }
-.slot .t { font: .72rem var(--mono); color: var(--muted); flex: none; }
-.slot.wrong { border-color: var(--rubric); }
+.slot { border: 1px solid var(--rule); border-radius: 4px; padding: 6px 4px; display: grid; justify-items: center; gap: 0; transition: border-color .3s, background .3s, transform .3s; position: relative; }
+.slot .t { font: 500 .78rem var(--mono); color: var(--muted); }
+.slot .pts { font: .62rem var(--mono); color: var(--muted); opacity: .8; }
+.slot.wrong { border-color: var(--rubric); animation: pop .35s; }
 .slot.wrong .t { color: var(--rubric); }
-.slot.skipped { background: color-mix(in srgb, var(--skip) 18%, transparent); }
-.slot.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
-.slot.right .t { color: var(--good); }
-.slot.now { border-color: var(--ink); }
-.guesslog { display: grid; gap: 4px; font-size: .95rem; }
-.guesslog div { display: flex; gap: 10px; border-bottom: 1px dotted var(--rule); padding: 3px 0; }
+.slot.skipped { background: color-mix(in srgb, var(--skip) 18%, transparent); animation: pop .35s; }
+.slot.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 16%, transparent); animation: pop .35s; }
+.slot.right .t, .slot.right .pts { color: var(--good); }
+.slot.now { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 14px var(--glow); }
+.slot.now .pts { color: var(--gold); opacity: 1; }
+@keyframes pop { 0% { transform: scale(.85); } 60% { transform: scale(1.06); } 100% { transform: none; } }
+
+.player { display: flex; align-items: center; gap: 16px; }
+.play { width: 68px; height: 68px; border-radius: 50%; border: 0; background: var(--rubric); color: var(--rubric-ink); display: grid; place-items: center; flex: none; position: relative; transition: transform .15s; }
+.play:hover:not(:disabled) { transform: scale(1.06); }
+.play:active:not(:disabled) { transform: scale(.95); }
+.play:disabled { opacity: .4; cursor: default; }
+.play svg { width: 26px; height: 26px; fill: currentColor; }
+.play.playing::before, .play.playing::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--rubric); animation: ring 1.4s ease-out infinite; }
+.play.playing::after { animation-delay: .7s; }
+@keyframes ring { from { transform: scale(1); opacity: .7; } to { transform: scale(1.6); opacity: 0; } }
+.bar { flex: 1; display: grid; gap: 6px; min-width: 0; }
+.track { position: relative; height: 12px; background: color-mix(in srgb, var(--ink) 8%, transparent); border-radius: 3px; overflow: hidden; }
+.track .unlocked { position: absolute; inset: 0 auto 0 0; background: color-mix(in srgb, var(--rubric) 22%, transparent); transition: width .5s cubic-bezier(.3, 1.3, .5, 1); }
+.track .prog { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--rubric), var(--gold)); width: 0; }
+.track .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--leaf); }
+.scale { display: flex; justify-content: space-between; font: .72rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.eq { display: flex; gap: 3px; align-items: flex-end; height: 18px; }
+.eq i { width: 3px; background: var(--rubric); border-radius: 1px; height: 3px; transition: height .08s; }
+
+.guessrow { position: relative; display: flex; gap: 8px; flex-wrap: wrap; }
+.guessrow input { flex: 1 1 220px; min-width: 0; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 4px; background: var(--page); }
+.btn { padding: 11px 18px; border-radius: 4px; border: 1px solid var(--ink); background: var(--ink); color: var(--leaf); font-weight: 700; transition: transform .12s, opacity .2s; }
+.btn:active:not(:disabled) { transform: scale(.96); }
+.btn.gold { background: var(--gold); border-color: var(--gold); color: #1a1406; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); font-weight: 500; }
+.btn:disabled { opacity: .4; cursor: default; }
+.sugg { position: absolute; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--leaf); border: 1px solid var(--rule); border-radius: 4px; max-height: 260px; overflow-y: auto; z-index: 5; box-shadow: 0 10px 24px rgb(0 0 0 / .14); }
+.sugg li { padding: 7px 10px; border-radius: 3px; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; }
+.sugg li small { color: var(--muted); text-align: right; }
+.sugg li.on, .sugg li:hover { background: color-mix(in srgb, var(--rubric) 12%, transparent); }
+.sugg li.none { color: var(--muted); cursor: default; background: none; }
+.guesslog { display: grid; gap: 2px; font-size: .95rem; }
+.guesslog div { display: flex; gap: 10px; border-bottom: 1px dotted var(--rule); padding: 2px 0; animation: slidein .3s ease-out; }
+@keyframes slidein { from { opacity: 0; transform: translateX(-10px); } }
 .guesslog .n { font: .75rem/1.9 var(--mono); color: var(--muted); width: 2.5em; flex: none; }
 .guesslog .x { color: var(--rubric); }
 .guesslog .s { color: var(--muted); font-style: italic; }
 
-.player { display: flex; align-items: center; gap: 16px; }
-.play { width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--rubric); color: var(--rubric-ink); display: grid; place-items: center; flex: none; }
-.play:disabled { opacity: .4; cursor: default; }
-.play svg { width: 26px; height: 26px; fill: currentColor; }
-.bar { flex: 1; display: grid; gap: 6px; }
-.track { position: relative; height: 10px; background: color-mix(in srgb, var(--ink) 8%, transparent); border-radius: 2px; overflow: hidden; }
-.track .unlocked { position: absolute; inset: 0 auto 0 0; background: color-mix(in srgb, var(--rubric) 22%, transparent); }
-.track .prog { position: absolute; inset: 0 auto 0 0; background: var(--rubric); width: 0; }
-.track .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--leaf); }
-.scale { display: flex; justify-content: space-between; font: .72rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-
-.guessrow { position: relative; display: flex; gap: 8px; flex-wrap: wrap; }
-.guessrow input { flex: 1 1 240px; min-width: 0; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 3px; background: var(--page); }
-.btn { padding: 11px 18px; border-radius: 3px; border: 1px solid var(--ink); background: var(--ink); color: var(--leaf); font-weight: 700; }
-.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); font-weight: 500; }
-.btn:disabled { opacity: .4; cursor: default; }
-.sugg { position: absolute; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--leaf); border: 1px solid var(--rule); border-radius: 3px; max-height: 260px; overflow-y: auto; z-index: 5; box-shadow: 0 10px 24px rgb(0 0 0 / .12); }
-.sugg li { padding: 7px 10px; border-radius: 2px; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; }
-.sugg li small { color: var(--muted); text-align: right; }
-.sugg li.on, .sugg li:hover { background: color-mix(in srgb, var(--rubric) 12%, transparent); }
-
-.reveal { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: center; border-top: 1px solid var(--rule); padding-top: 20px; }
-.reveal img { width: 120px; height: 120px; border-radius: 3px; object-fit: cover; background: var(--rule); }
+.reveal { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: center; border-top: 1px solid var(--rule); padding-top: 16px; animation: rise .5s cubic-bezier(.2, 1.2, .4, 1); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+.reveal img { width: 120px; height: 120px; border-radius: 4px; object-fit: cover; background: var(--rule); box-shadow: 0 8px 20px rgb(0 0 0 / .18); animation: spinin .6s cubic-bezier(.2, 1.2, .4, 1); }
+@keyframes spinin { from { transform: rotateY(90deg) scale(.8); } }
 .reveal .verdict { font: 500 .78rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 .reveal .verdict.win { color: var(--good); }
 .reveal .verdict.lose { color: var(--rubric); }
-.reveal h3 { font: 400 1.6rem/1.15 var(--display); margin: 2px 0; text-wrap: balance; }
+.reveal .verse { font: italic .95rem/1.35 var(--body); color: var(--muted); margin: 4px 0 2px; border-left: 2px solid var(--gold); padding-left: 10px; }
+.reveal h3 { font: 400 1.55rem/1.15 var(--display); margin: 2px 0; text-wrap: balance; }
 .reveal p { margin: 0; color: var(--muted); }
 .reveal .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .reveal a { color: var(--rubric); }
 .status { color: var(--muted); font-size: .95rem; margin: 0; }
 .status.err { color: var(--rubric); }
 
+.float { position: absolute; font: 400 2rem var(--display); color: var(--gold); pointer-events: none; z-index: 10; animation: floatup 1.4s ease-out forwards; text-shadow: 0 2px 12px var(--glow); white-space: nowrap; }
+@keyframes floatup { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -10px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -70px) scale(1); } }
+.spark { position: fixed; width: 8px; height: 8px; pointer-events: none; z-index: 20; border-radius: 1px; }
+
+/* intro / game over */
+.intro { display: grid; gap: 12px; text-align: center; justify-items: center; padding: 8px 0; }
+.intro .big { font: 400 clamp(1.35rem, 3.6vw, 1.8rem)/1.2 var(--display); margin: 0; text-wrap: balance; }
+cite { display: block; font: normal .72rem var(--mono); letter-spacing: .06em; color: var(--muted); margin-top: 4px; }
+.rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; text-align: left; }
+.rules div { border: 1px solid var(--rule); border-radius: 4px; padding: 8px 10px; font-size: .88rem; line-height: 1.35; }
+.rules b { display: block; font: 400 1.05rem var(--display); color: var(--rubric); }
+@media (max-width: 520px) { .rules div { font-size: .78rem; padding: 6px 8px; } .rules b { font-size: .9rem; } }
+.shortrules { display: none; margin: 0; font-size: .88rem; color: var(--muted); }
+.shortrules b { color: var(--ink); font-weight: 500; }
+.mode { font: .82rem var(--mono); color: var(--muted); }
+.mode b { color: var(--gold); font-weight: 500; }
+.mode.practice b { color: var(--rubric); }
+.over .final { font: 500 3rem/1 var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
+.over .title { font: 400 1.35rem var(--display); margin: 0; }
+.sumrow { display: flex; gap: 18px; justify-content: center; font: .82rem var(--mono); color: var(--muted); flex-wrap: wrap; }
+.sumrow b { color: var(--ink); font-weight: 500; }
+.nameform { display: flex; gap: 8px; width: 100%; max-width: 380px; }
+.nameform input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--page); }
+
+/* leaderboard */
+.tabs { display: flex; gap: 4px; }
+.tabs button { font: 500 .7rem var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--rule); background: transparent; border-radius: 3px; padding: 3px 8px; color: var(--muted); }
+.tabs button[aria-pressed="true"] { background: var(--ink); color: var(--leaf); border-color: var(--ink); }
+.board { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: r; max-height: 300px; overflow-y: auto; }
+.board li { display: grid; grid-template-columns: 2em 1fr auto; gap: 10px; align-items: baseline; padding: 4px 6px; border-radius: 3px; counter-increment: r; animation: slidein .3s ease-out backwards; }
+.board li::before { content: counter(r); font: .78rem var(--mono); color: var(--muted); text-align: right; }
+.board li:nth-child(1)::before { content: "♔"; color: var(--gold); font-size: 1rem; }
+.board li:nth-child(2)::before, .board li:nth-child(3)::before { color: var(--gold); }
+.board li.me { background: color-mix(in srgb, var(--gold) 16%, transparent); }
+.board .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board .nm small { font: .68rem var(--mono); color: var(--muted); margin-left: 6px; }
+.board .sc { font: 500 .9rem var(--mono); font-variant-numeric: tabular-nums; color: var(--gold); }
+.empty { color: var(--muted); font-size: .9rem; margin: 0; }
+
 /* settings */
-.label { font: 500 .75rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { border: 1px solid var(--rule); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: .92rem; display: inline-flex; gap: 6px; align-items: center; }
+.label { font: 500 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chips.scroll { max-height: 104px; overflow-y: auto; padding-right: 2px; }
+.chip { border: 1px solid var(--rule); background: transparent; border-radius: 999px; padding: 2px 10px; font-size: .86rem; line-height: 1.5; display: inline-flex; gap: 6px; align-items: center; transition: background .2s, color .2s, transform .12s; }
+.chip:active { transform: scale(.94); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--leaf); border-color: var(--ink); }
-.chip .ct { font: .7rem var(--mono); opacity: .65; }
-.addrow { display: flex; gap: 8px; position: relative; }
+.chip .ct { font: .68rem var(--mono); opacity: .65; }
 .chip.add { border-style: dashed; color: var(--muted); }
 .chip.add:hover { color: var(--ink); border-color: var(--ink); }
 .chip.add b { color: var(--rubric); font-weight: 700; }
-.sugg li.none { color: var(--muted); cursor: default; background: none; }
-.hint { margin: 0; font-size: .85rem; color: var(--muted); }
-.addrow input { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 3px; background: var(--page); }
-.linkbtn { background: none; border: 0; padding: 0; color: var(--rubric); font: 500 .75rem var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.hint { margin: 0; font-size: .82rem; color: var(--muted); }
+.addrow { display: flex; gap: 8px; position: relative; }
+.addrow input { flex: 1; min-width: 0; padding: 7px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--page); }
+.addrow .btn { padding: 7px 14px; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--rubric); font: 500 .72rem var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+details.more summary { cursor: pointer; font: 500 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style: none; }
+details.more summary::before { content: "▸ "; color: var(--rubric); }
+details.more[open] summary::before { content: "▾ "; }
+details.more > div { display: grid; gap: 8px; margin-top: 8px; }
 
-.years { display: grid; gap: 10px; }
-.yearvals { font: 400 1.6rem var(--display); display: flex; align-items: baseline; gap: 10px; }
-.yearvals span.dash { color: var(--muted); font-size: 1.1rem; }
-.range { position: relative; height: 28px; }
-.range .rail { position: absolute; left: 0; right: 0; top: 12px; height: 4px; background: var(--rule); border-radius: 2px; }
-.range .fill { position: absolute; top: 12px; height: 4px; background: var(--rubric); border-radius: 2px; }
-.range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; height: 28px; }
-.range input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 20px; height: 20px; border-radius: 50%; background: var(--leaf); border: 2px solid var(--rubric); cursor: grab; }
-.range input::-moz-range-thumb { pointer-events: auto; width: 16px; height: 16px; border-radius: 50%; background: var(--leaf); border: 2px solid var(--rubric); cursor: grab; }
+.knobs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 440px) { .knobs { gap: 12px; } .knob .val { font-size: 1rem; } }
+.knob { display: grid; gap: 4px; }
+.knob .val { font: 400 1.2rem/1.1 var(--display); }
+.knob .val .dash { color: var(--muted); font-size: .95rem; }
+.range { position: relative; height: 26px; }
+.range .rail { position: absolute; left: 0; right: 0; top: 11px; height: 4px; background: var(--rule); border-radius: 2px; }
+.range .fill { position: absolute; top: 11px; height: 4px; background: var(--rubric); border-radius: 2px; }
+.range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; height: 26px; }
+.range input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--leaf); border: 2px solid var(--rubric); cursor: grab; }
+.range input::-moz-range-thumb { pointer-events: auto; width: 14px; height: 14px; border-radius: 50%; background: var(--leaf); border: 2px solid var(--rubric); cursor: grab; }
 .range input::-webkit-slider-runnable-track { background: none; }
 .range input::-moz-range-track { background: none; }
-.navlink { color: var(--rubric); text-decoration: none; border-bottom: 1px solid currentColor; }
-.presets { display: flex; flex-wrap: wrap; gap: 6px; }
-.presets button { font: .78rem var(--mono); border: 1px solid var(--rule); background: transparent; border-radius: 3px; padding: 4px 8px; }
-.foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--rule); padding-top: 16px; }
-.poolinfo { font: .82rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.range.single input { pointer-events: auto; }
+.presets { display: flex; flex-wrap: wrap; gap: 4px; }
+.presets button { font: .7rem var(--mono); border: 1px solid var(--rule); background: transparent; border-radius: 3px; padding: 2px 6px; }
+.foot { display: grid; gap: 8px; border-top: 1px solid var(--rule); padding-top: 12px; }
+.foot .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.poolinfo { font: .8rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 8%, transparent); overflow: hidden; }
+.meter i { display: block; height: 100%; background: linear-gradient(90deg, var(--rubric), var(--gold)); transition: width .5s cubic-bezier(.3, 1.2, .5, 1); }
+.multtag { font: 500 1.25rem var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
+.multtag.off { color: var(--rubric); font-size: 1rem; }
 
 @media (max-width: 520px) {
-  .leaf { padding: 18px; }
-  .slot .g { display: none; }
-  .slot { justify-content: center; padding: 6px 4px; }
+  body { padding-top: 14px; }
+  .intro { gap: 8px; padding: 0; }
+  .intro .big { font-size: 1.15rem; }
+  .intro .rules { display: none; }
+  .intro .shortrules { display: block; }
+  .tag { display: none; }
+  h1 { font-size: 1.8rem; white-space: nowrap; }
+  .hud .cell { padding: 3px 4px; }
+  .reveal { gap: 12px; align-items: start; }
+  .reveal h3 { font-size: 1.25rem; }
+  .reveal p { font-size: .88rem; }
+  .reveal .acts .btn { padding: 8px 12px; font-size: .9rem; }
+  header { flex-wrap: nowrap; }
+  .hud { gap: 4px; }
+  .hud .k { font-size: .55rem; }
+  .hud .v { font-size: .95rem; }
+  .leaf { gap: 10px; }
+  .chips.scroll { max-height: 64px; }
+  .cols, .side { gap: 12px; }
+  .leaf { padding: 16px; }
+  .hud .cell { min-width: 0; flex: 1; padding: 4px 6px; }
   .reveal { grid-template-columns: 84px 1fr; }
   .reveal img { width: 84px; height: 84px; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
@@ -157,101 +280,172 @@ h2 .v { color: var(--rubric); margin-right: .3em; }
   <header>
     <div>
       <h1><span class="p">P</span>salmless</h1>
-      <div class="tag">Name the worship song from the first second · <a class="navlink" href="popular/">Hits edition</a></div>
+      <div class="tag">Name the worship song from the first half-second</div>
     </div>
-    <div class="stats">
-      <span>Played <b id="stPlayed">0</b></span>
-      <span>Won <b id="stWon">0</b></span>
-      <span>Streak <b id="stStreak">0</b></span>
+    <div class="hud" aria-live="polite">
+      <div class="cell score"><span class="k">Score</span><span class="v" id="hScore">0</span></div>
+      <div class="cell"><span class="k">Streak</span><span class="v" id="hStreak">0</span></div>
+      <div class="cell"><span class="k">Lamps</span><div class="lamps" id="lamps"></div></div>
+      <div class="cell"><span class="k">Best</span><span class="v" id="hBest">0</span></div>
     </div>
   </header>
 
-  <section class="leaf" id="game" aria-live="polite">
-    <h2><span class="v">℣</span>Listen</h2>
-    <div class="slots" id="slots"></div>
-    <div class="player">
-      <button class="play" id="playBtn" aria-label="Play clip" disabled>
-        <svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>
-      </button>
-      <div class="bar">
-        <div class="track" id="track"><div class="unlocked" id="unlocked"></div><div class="prog" id="prog"></div></div>
-        <div class="scale"><span id="clipLen">0.5s unlocked</span><span>16s</span></div>
+  <div class="cols">
+    <section class="leaf" id="game" aria-live="polite">
+      <div class="rays"></div>
+      <h2><span><span class="v">℣</span><span id="gameTitle">Listen</span></span><small id="roundTag"></small></h2>
+
+      <div class="intro" id="intro">
+        <p class="big" id="introLine">“Sing to the LORD a new song.”</p>
+        <div class="rules">
+          <div><b>Listen</b>Half a second. Skips and misses unlock more.</div>
+          <div><b>Score</b>1000 at 0.5s down to 100 at 16s. Streaks add up to +100%.</div>
+          <div><b>Three lamps</b>A missed song puts one out. Five in a row relights one.</div>
+        </div>
+        <p class="shortrules">Name it from <b>0.5s</b> for <b>1000</b> points. Skips unlock more. Miss a song, lose a <b>lamp</b>.</p>
+        <div class="mode" id="modeLine"></div>
+        <button class="btn gold" id="startBtn" disabled>Begin</button>
       </div>
-    </div>
-    <div class="guessrow" id="guessRow">
-      <input id="guess" type="text" placeholder="Type a song title…" autocomplete="off" disabled>
-      <button class="btn" id="submitBtn" disabled>Guess</button>
-      <button class="btn ghost" id="skipBtn" disabled>Skip +</button>
-      <ul class="sugg" id="sugg" hidden></ul>
-    </div>
-    <div class="guesslog" id="log"></div>
-    <p class="status" id="status">Gathering songs…</p>
-    <div class="reveal" id="reveal" hidden>
-      <img id="rvArt" alt="">
-      <div>
-        <div class="verdict" id="rvVerdict"></div>
-        <h3 id="rvTitle"></h3>
-        <p id="rvMeta"></p>
-        <div class="acts">
-          <button class="btn" id="nextBtn">Next song</button>
-          <button class="btn ghost" id="fullBtn">Play preview</button>
-          <a id="rvLink" href="#" target="_blank" rel="noopener" class="btn ghost" style="text-decoration:none">Apple Music ↗</a>
+
+      <div id="play" hidden>
+        <div style="display:grid;gap:14px">
+          <div class="slots" id="slots"></div>
+          <div class="player">
+            <button class="play" id="playBtn" aria-label="Play clip">
+              <svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>
+            </button>
+            <div class="bar">
+              <div class="track" id="track"><div class="unlocked" id="unlocked"></div><div class="prog" id="prog"></div></div>
+              <div class="scale"><span id="clipLen">0.5s unlocked</span><span class="eq" id="eq"></span><span>16s</span></div>
+            </div>
+          </div>
+          <div class="guessrow" id="guessRow">
+            <input id="guess" type="text" placeholder="Type a song title…" autocomplete="off">
+            <button class="btn" id="submitBtn">Guess</button>
+            <button class="btn ghost" id="skipBtn">Skip</button>
+            <ul class="sugg" id="sugg" hidden></ul>
+          </div>
+          <div class="guesslog" id="log"></div>
+          <div class="reveal" id="reveal" hidden>
+            <img id="rvArt" alt="">
+            <div>
+              <div class="verdict" id="rvVerdict"></div>
+              <h3 id="rvTitle"></h3>
+              <p id="rvMeta"></p>
+              <div class="verse" id="rvVerse"></div>
+              <div class="acts">
+                <button class="btn gold" id="nextBtn">Next song</button>
+                <button class="btn ghost" id="fullBtn">Play preview</button>
+                <a id="rvLink" href="#" target="_blank" rel="noopener" class="btn ghost" style="text-decoration:none">Apple Music ↗</a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <section class="leaf" id="settings">
-    <h2><span class="v">℟</span>Your hymnal</h2>
-
-    <div style="display:grid;gap:10px">
-      <div class="label"><span>Artists · <span id="selCount">0</span> chosen</span>
-        <span><button class="linkbtn" id="allBtn">All</button> · <button class="linkbtn" id="noneBtn">None</button></span></div>
-      <div class="chips" id="chips"></div>
-      <form class="addrow" id="addForm">
-        <input id="addInput" type="text" placeholder="Search Apple Music for an artist, e.g. SEU Worship" autocomplete="off">
-        <button class="btn ghost" type="submit">Search</button>
-        <ul class="sugg" id="artistResults" hidden></ul>
-      </form>
-    </div>
-
-    <div style="display:grid;gap:10px">
-      <div class="label"><span>Discover</span><button class="linkbtn" id="shuffleBtn">Shuffle</button></div>
-      <p class="hint" id="featHint" hidden>Featured on songs by your picks</p>
-      <div class="chips" id="featured"></div>
-      <p class="hint">More worship collectives and writers</p>
-      <div class="chips" id="discover"></div>
-    </div>
-
-    <div class="years">
-      <div class="label"><span>Release years</span></div>
-      <div class="yearvals"><span id="yMinV"></span><span class="dash">to</span><span id="yMaxV"></span></div>
-      <div class="range">
-        <div class="rail"></div><div class="fill" id="yFill"></div>
-        <input type="range" id="yMin" min="1965" max="2026" step="1" aria-label="Earliest year">
-        <input type="range" id="yMax" min="1965" max="2026" step="1" aria-label="Latest year">
+      <div class="intro over" id="over" hidden>
+        <p class="title" id="overTitle"></p>
+        <div class="final" id="overScore">0</div>
+        <div class="verse" id="overVerse" style="font-style:italic;color:var(--muted);max-width:440px"></div>
+        <div class="sumrow">
+          <span>Songs named <b id="oCorrect">0</b></span>
+          <span>Best streak <b id="oStreak">0</b></span>
+          <span>Pool <b id="oPool">0</b> × <b id="oMult">1</b></span>
+        </div>
+        <form class="nameform" id="nameForm">
+          <input id="nameInput" maxlength="20" placeholder="Your name for the Book of Life" autocomplete="nickname">
+          <button class="btn gold" type="submit">Inscribe</button>
+        </form>
+        <p class="status" id="overStatus"></p>
+        <button class="btn" id="againBtn">Play again</button>
       </div>
-      <div class="presets">
-        <button data-y="1968-1989">Jesus Movement &amp; '80s</button>
-        <button data-y="1990-2004">'90s CCM</button>
-        <button data-y="2005-2014">Worship boom</button>
-        <button data-y="2015-2026">Modern worship</button>
-        <button data-y="1965-2026">Everything</button>
-      </div>
-    </div>
 
-    <div class="foot">
-      <span class="poolinfo" id="poolInfo"></span>
-      <button class="btn" id="applyBtn">Deal new songs</button>
+      <p class="status" id="status"></p>
+    </section>
+
+    <div class="side">
+      <section class="leaf" id="settings">
+        <h2><span><span class="v">℟</span>Your hymnal</span><small id="selCount">0 artists</small></h2>
+
+        <div class="knobs">
+          <div class="knob">
+            <div class="label"><span>Popularity</span></div>
+            <div class="val" id="popLabel"></div>
+            <div class="range single"><div class="rail"></div><div class="fill" id="popFill" style="left:0"></div>
+              <input type="range" id="pop" min="0" max="4" step="1" aria-label="Popularity filter"></div>
+            <div class="scale"><span>Hits</span><span>Deep cuts</span></div>
+          </div>
+          <div class="knob">
+            <div class="label"><span>Years</span></div>
+            <div class="val"><span id="yMinV"></span> <span class="dash">–</span> <span id="yMaxV"></span></div>
+            <div class="range">
+              <div class="rail"></div><div class="fill" id="yFill"></div>
+              <input type="range" id="yMin" min="1965" max="2026" step="1" aria-label="Earliest year">
+              <input type="range" id="yMax" min="1965" max="2026" step="1" aria-label="Latest year">
+            </div>
+            <div class="presets">
+              <button data-y="1968-1989">'70s–80s</button>
+              <button data-y="1990-2004">'90s</button>
+              <button data-y="2005-2014">'05–14</button>
+              <button data-y="2015-2026">Modern</button>
+              <button data-y="1965-2026">All</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:6px">
+          <div class="label"><span>Artists</span>
+            <span><button class="linkbtn" id="allBtn">All</button> · <button class="linkbtn" id="noneBtn">None</button> · <button class="linkbtn" id="resetBtn">Reset</button></span></div>
+          <div class="chips scroll" id="chips"></div>
+        </div>
+
+        <details class="more" id="moreBox">
+          <summary>Add artists</summary>
+          <div>
+            <form class="addrow" id="addForm">
+              <input id="addInput" type="text" placeholder="Search Apple Music, e.g. SEU Worship" autocomplete="off">
+              <button class="btn ghost" type="submit">Search</button>
+              <ul class="sugg" id="artistResults" hidden></ul>
+            </form>
+            <p class="hint" id="featHint" hidden>Featured on songs by your picks</p>
+            <div class="chips" id="featured"></div>
+            <div class="label"><span>Worship collectives</span><button class="linkbtn" id="shuffleBtn">Shuffle</button></div>
+            <div class="chips" id="discover"></div>
+          </div>
+        </details>
+
+        <div class="foot">
+          <div class="row">
+            <div style="display:grid;gap:2px">
+              <span class="poolinfo" id="poolInfo">Counting songs…</span>
+              <span class="hint" id="multHint">Bigger, more varied pools score higher</span>
+            </div>
+            <span class="multtag" id="multTag">×—</span>
+          </div>
+          <div class="meter"><i id="multMeter" style="width:0"></i></div>
+          <button class="btn" id="applyBtn">Deal new songs</button>
+        </div>
+      </section>
+
+      <section class="leaf" id="boardBox">
+        <h2><span><span class="v">✠</span>Book of Life</span>
+          <span class="tabs"><button data-p="all" aria-pressed="true">All time</button><button data-p="week" aria-pressed="false">Week</button></span></h2>
+        <ol class="board" id="board"></ol>
+        <p class="empty" id="boardEmpty" hidden>No names written yet. Be the first.</p>
+      </section>
     </div>
-  </section>
+  </div>
 </div>
 
 <audio id="audio" preload="auto"></audio>
 
 <script>
+const API = location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.protocol === "file:"
+  ? "http://localhost:8787/api" : "https://psalmless-api.psalmless-api.workers.dev/api";
 const CLIPS = [0.5, 1, 2, 4, 8, 16];
+const STAGE_PTS = [1000, 700, 500, 350, 200, 100];
 const MAX = CLIPS[CLIPS.length - 1];
+const LIVES = 3;
 const THIS_YEAR = new Date().getFullYear();
 const ARTISTS = [
   "Elevation Worship", "Hillsong Worship", "Hillsong UNITED", "Bethel Music", "Chris Tomlin",
@@ -266,6 +460,59 @@ const ARTISTS = [
 ];
 const DEFAULT_ON = ["Elevation Worship", "Hillsong Worship", "Bethel Music", "Chris Tomlin", "Phil Wickham",
   "Lauren Daigle", "for KING & COUNTRY", "Casting Crowns", "MercyMe", "Maverick City Music", "Brandon Lake", "Crowder"];
+const POP_STEPS = [
+  { short: "Top 3 per artist",  label: "Signature songs" },
+  { short: "Top 10 per artist", label: "Radio hits" },
+  { short: "Top 25 per artist", label: "Fan favorites" },
+  { short: "Top 60 per artist", label: "Deep cuts" },
+  { short: "All songs",         label: "Everything" }
+];
+const DEFAULT_POP = 1, DEFAULT_YEARS = [1965, THIS_YEAR];
+
+/* ---------- scripture ---------- */
+const V = {
+  intro: [
+    ["Sing to the LORD a new song.", "Psalm 96:1"],
+    ["Make a joyful noise unto the LORD, all ye lands.", "Psalm 100:1"],
+    ["Let everything that has breath praise the LORD.", "Psalm 150:6"],
+    ["Speak to one another with psalms, hymns, and songs from the Spirit.", "Ephesians 5:19"],
+    ["He put a new song in my mouth, a hymn of praise to our God.", "Psalm 40:3"]
+  ],
+  // by the stage the song was named at
+  win: [
+    [["Before they call I will answer.", "Isaiah 65:24"], ["Loaves and fishes. A miracle."], ["Seventy times seven? One was enough."], ["Like David before Saul, one note did it."]],
+    [["My sheep hear my voice, and I know them.", "John 10:27"], ["Quick as Peter's sword."], ["The first shall be first."]],
+    [["Seek and ye shall find.", "Matthew 7:7"], ["Your ear is tuned like a Levite's harp."], ["The third day, as foretold."]],
+    [["Ask and it will be given to you.", "Matthew 7:7"], ["Found, like the lost coin."], ["Steady as Nehemiah's wall."]],
+    [["Knock and the door will be opened.", "Matthew 7:7"], ["Like Jacob, you wrestled and prevailed."], ["The laborer hired at the eleventh hour still gets paid."]],
+    [["They that wait upon the LORD shall renew their strength.", "Isaiah 40:31"], ["By the skin of your teeth.", "Job 19:20"], ["Better late than a lukewarm guess."]]
+  ],
+  lose: [
+    ["For now we see through a glass, darkly.", "1 Corinthians 13:12"],
+    ["They have ears, but hear not.", "Psalm 115:6"],
+    ["Be still, and know. Then guess better next time.", "Psalm 46:10"],
+    ["Even Peter denied Him three times."],
+    ["The spirit is willing, but the ear is weak.", "Matthew 26:41"],
+    ["Thomas needed to see it too."],
+    ["All we like sheep have gone astray.", "Isaiah 53:6"]
+  ],
+  wrong: ["Not quite, Thomas.", "A false prophet!", "Not that one.", "Scribes and Pharisees!", "Wrong psalm.", "Selah. Try again.", "Close, but no manna."],
+  skip: ["Be still…", "Patience, Job.", "Wait upon the LORD…", "More light…", "Selah."],
+  streak: { 3: "Threefold cord", 5: "Five smooth stones", 7: "Seventh day", 10: "Ten commandments", 12: "Twelve tribes", 40: "Forty days" },
+  lampOut: ["A lamp has gone out.", "Your oil runs low.", "Trim your wicks."],
+  lampBack: "Five in a row. A lamp is relit.",
+  over: [
+    [0, "Dust to dust", ["For dust you are, and to dust you shall return.", "Genesis 3:19"]],
+    [1500, "Mustard seed", ["Faith as small as a mustard seed can move mountains.", "Matthew 17:20"]],
+    [5000, "Faithful servant", ["Well done, good and faithful servant.", "Matthew 25:21"]],
+    [12000, "Temple choir", ["The singers and trumpeters joined in unison, as one voice.", "2 Chronicles 5:13"]],
+    [25000, "Sweet psalmist of Israel", ["David, the sweet psalmist of Israel.", "2 Samuel 23:1"]],
+    [50000, "Heavenly host", ["Suddenly there was with the angel a multitude of the heavenly host praising God.", "Luke 2:13"]]
+  ],
+  board: ["Rejoice that your names are written in heaven.", "Luke 10:20"]
+};
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const verseHTML = v => `“${esc(v[0])}”${v[1] ? `<cite>${esc(v[1])}</cite>` : ""}`;
 
 const $ = id => document.getElementById(id);
 const store = {
@@ -274,37 +521,106 @@ const store = {
 };
 
 let artists = store.get("artists", ARTISTS.map(n => ({ name: n, on: DEFAULT_ON.includes(n) })));
-let years = store.get("years", [1995, THIS_YEAR]);
-let stats = store.get("stats", { played: 0, won: 0, streak: 0 });
-const cache = {};          // artist name -> tracks[]
-let pool = [];             // deduped playable songs
-let recent = store.get("recent", []);
-let round = null;
+let years = store.get("years", DEFAULT_YEARS);
+let popIdx = store.get("pop2", DEFAULT_POP);
+let best = store.get("best", 0);
+let myName = store.get("name", "");
+let run = null;            // server view of the current run
+let titles = [];           // [[title, artist], ...] for autocomplete
+let busy = false;
 
-/* ---------- text helpers ---------- */
-function baseTitle(t) {
-  return t.replace(/\s*[\(\[].*?[\)\]]/g, "").replace(/\s+-\s+.*$/, "").trim();
-}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function norm(t) {
-  return baseTitle(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+  return t.replace(/\s*[\(\[].*?[\)\]]/g, "").replace(/\s+-\s+.*$/, "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/&/g, "and").replace(/[^a-z0-9 ]/g, "").replace(/^the /, "").replace(/\s+/g, " ").trim();
 }
-const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function api(path, body) {
+  const res = await fetch(API + path, body === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.error || "Couldn't reach the server."), { status: res.status });
+  return data;
+}
+function settings() { return { artists: artists.filter(a => a.on).map(a => a.name), years, pop: popIdx }; }
+
+/* ---------- HUD ---------- */
+const LAMP_SVG = `<svg viewBox="0 0 14 20"><path class="flame" d="M7 1C8.6 4 10 5.6 10 7.6A3 3 0 0 1 4 7.6C4 5.6 5.4 4 7 1Z" fill="var(--gold)"/><path d="M2 12h10l-1.5 6h-7Z" fill="var(--muted)"/><rect x="5.5" y="10" width="3" height="2" fill="var(--muted)"/></svg>`;
+$("lamps").innerHTML = Array.from({ length: LIVES }, () => `<span class="lamp">${LAMP_SVG}</span>`).join("");
+let shown = { score: 0 };
+function bump(el) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+function countTo(el, from, to) {
+  const t0 = performance.now(), d = 700;
+  const step = now => {
+    const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = Math.round(from + (to - from) * e).toLocaleString();
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function renderHud() {
+  const score = run ? run.score : 0;
+  if (score !== shown.score) { countTo($("hScore"), shown.score, score); bump($("hScore")); shown.score = score; }
+  else $("hScore").textContent = score.toLocaleString();
+  const streak = run ? run.streak : 0;
+  if (+$("hStreak").textContent !== streak && streak) bump($("hStreak"));
+  $("hStreak").textContent = streak;
+  $("hBest").textContent = best.toLocaleString();
+  const lives = run ? run.lives : LIVES;
+  [...$("lamps").children].forEach((l, i) => {
+    const out = i >= lives;
+    if (out && !l.classList.contains("out")) { l.classList.add("dying"); setTimeout(() => l.classList.remove("dying"), 800); }
+    l.classList.toggle("out", out);
+  });
+}
+
+/* ---------- effects ---------- */
+function floatText(text, anchor, color) {
+  const box = $("game").getBoundingClientRect(), a = anchor.getBoundingClientRect();
+  const f = document.createElement("div");
+  f.className = "float"; f.textContent = text;
+  if (color) f.style.color = color;
+  f.style.left = (a.left + a.width / 2 - box.left) + "px";
+  f.style.top = (a.top - box.top - 10) + "px";
+  $("game").appendChild(f);
+  setTimeout(() => f.remove(), 1500);
+}
+function sparks(anchor, n = 28) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const a = anchor.getBoundingClientRect();
+  const cx = a.left + a.width / 2, cy = a.top + a.height / 2;
+  const colors = [getComputedStyle(document.documentElement).getPropertyValue("--gold"), getComputedStyle(document.documentElement).getPropertyValue("--good"), "#fff"];
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement("div");
+    s.className = "spark";
+    s.style.background = colors[i % 3];
+    s.style.left = cx + "px"; s.style.top = cy + "px";
+    document.body.appendChild(s);
+    const ang = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 140;
+    s.animate([
+      { transform: "translate(-50%,-50%) rotate(0)", opacity: 1 },
+      { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 60}px) rotate(${Math.random() * 540}deg)`, opacity: 0 }
+    ], { duration: 900 + Math.random() * 500, easing: "cubic-bezier(.2,.7,.4,1)" }).onfinish = () => s.remove();
+  }
+}
+function flash(cls) { const g = $("game"); g.classList.remove(cls); void g.offsetWidth; g.classList.add(cls); }
 
 /* ---------- settings UI ---------- */
 function renderChips() {
   const el = $("chips");
   el.innerHTML = "";
-  artists.forEach((a, i) => {
+  artists.forEach(a => {
     const b = document.createElement("button");
     b.className = "chip";
     b.setAttribute("aria-pressed", a.on);
-    const n = cache[a.name] ? cache[a.name].length : null;
-    b.innerHTML = esc(a.name) + (a.on && n !== null ? ` <span class="ct">${n}</span>` : "");
+    const n = poolCounts[a.name];
+    b.innerHTML = esc(a.name) + (a.on && n !== undefined ? ` <span class="ct">${n}</span>` : "");
     b.onclick = () => { a.on = !a.on; saveSettings(); renderChips(); };
     el.appendChild(b);
   });
-  $("selCount").textContent = artists.filter(a => a.on).length;
+  const n = artists.filter(a => a.on).length;
+  $("selCount").textContent = `${n} artist${n === 1 ? "" : "s"}`;
 }
 function renderYears() {
   const lo = +$("yMin").value, hi = +$("yMax").value;
@@ -313,12 +629,18 @@ function renderYears() {
   $("yFill").style.left = ((lo - min) / span * 100) + "%";
   $("yFill").style.width = ((hi - lo) / span * 100) + "%";
 }
-function saveSettings() { store.set("artists", artists); store.set("years", years); }
+function renderPop() {
+  $("pop").value = popIdx;
+  $("popLabel").textContent = POP_STEPS[popIdx].label;
+  $("popFill").style.width = (popIdx / 4 * 100) + "%";
+}
+function saveSettings() { store.set("artists", artists); store.set("years", years); store.set("pop2", popIdx); previewPool(); }
 
 $("yMin").max = $("yMax").max = THIS_YEAR;
 $("yMin").value = years[0]; $("yMax").value = years[1];
 $("yMin").oninput = () => { if (+$("yMin").value > +$("yMax").value) $("yMin").value = $("yMax").value; years = [+$("yMin").value, +$("yMax").value]; renderYears(); saveSettings(); };
 $("yMax").oninput = () => { if (+$("yMax").value < +$("yMin").value) $("yMax").value = $("yMin").value; years = [+$("yMin").value, +$("yMax").value]; renderYears(); saveSettings(); };
+$("pop").oninput = () => { popIdx = +$("pop").value; renderPop(); saveSettings(); };
 document.querySelectorAll(".presets button").forEach(b => b.onclick = () => {
   const [lo, hi] = b.dataset.y.split("-").map(Number);
   $("yMin").value = lo; $("yMax").value = Math.min(hi, THIS_YEAR);
@@ -326,14 +648,68 @@ document.querySelectorAll(".presets button").forEach(b => b.onclick = () => {
 });
 $("allBtn").onclick = () => { artists.forEach(a => a.on = true); saveSettings(); renderChips(); };
 $("noneBtn").onclick = () => { artists.forEach(a => a.on = false); saveSettings(); renderChips(); };
+$("resetBtn").onclick = () => {
+  artists = ARTISTS.map(n => ({ name: n, on: DEFAULT_ON.includes(n) }));
+  years = [...DEFAULT_YEARS]; popIdx = DEFAULT_POP;
+  $("yMin").value = years[0]; $("yMax").value = years[1];
+  renderYears(); renderPop(); renderChips(); renderDiscover(); saveSettings();
+};
 function addArtist(name) {
   const hit = artists.find(a => a.name.toLowerCase() === name.toLowerCase());
   if (hit) hit.on = true; else artists.push({ name, on: true });
   saveSettings(); renderChips(); renderDiscover();
-  $("poolInfo").textContent = `Added ${name}. Press Deal new songs to play with them.`;
+}
+
+/* pool preview: how many songs these settings give, and what they're worth */
+let poolCounts = {}, previewTimer = null, previewSeq = 0;
+function previewPool() {
+  clearTimeout(previewTimer);
+  $("poolInfo").textContent = "Counting songs…";
+  previewTimer = setTimeout(async () => {
+    const seq = ++previewSeq;
+    const s = settings();
+    if (!s.artists.length) { showPool({ size: 0, mult: 0, counts: {}, failed: [], minRanked: 15 }); return; }
+    try {
+      const p = await api("/pool", s);
+      if (seq === previewSeq) showPool(p);
+    } catch (e) { if (seq === previewSeq) $("poolInfo").textContent = e.message; }
+  }, 450);
+}
+let lastPool = null;
+function showPool(p) {
+  lastPool = p;
+  poolCounts = p.counts; renderChips(); renderDiscover();
+  $("poolInfo").textContent = `${p.size} songs · ${POP_STEPS[popIdx].short} · ${years[0]}–${years[1]}` + (p.failed.length ? ` · couldn't load ${p.failed.join(", ")}` : "");
+  $("multTag").textContent = p.mult ? "×" + p.mult.toFixed(2) : "Practice";
+  $("multTag").classList.toggle("off", !p.mult);
+  $("multMeter").style.width = (p.mult / 2 * 100) + "%";
+  $("multHint").textContent = p.mult ? "Bigger, more varied pools score higher" : `Under ${p.minRanked} songs: practice only, not ranked`;
+  renderMode();
+}
+function renderMode() {
+  const p = lastPool;
+  if (!p) { $("modeLine").textContent = "Counting songs…"; return; }
+  $("startBtn").disabled = !p.size;
+  $("modeLine").className = "mode" + (p.mult ? "" : " practice");
+  $("modeLine").innerHTML = !p.size ? "No songs match. Adjust your hymnal." :
+    p.mult ? `Ranked run · ${p.size} songs · points <b>×${p.mult.toFixed(2)}</b>` :
+    `<b>Practice</b> · ${p.size} songs · add more for a ranked run`;
 }
 
 /* artist search: live lookup against Apple Music's artist index */
+let jsonpId = 0;
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = "__psalm" + (++jsonpId);
+    const s = document.createElement("script");
+    const done = () => { delete window[cb]; s.remove(); clearTimeout(timer); };
+    const timer = setTimeout(() => { done(); reject(new Error("timeout")); }, 15000);
+    window[cb] = data => { done(); resolve(data); };
+    s.onerror = () => { done(); reject(new Error("network")); };
+    s.src = url + "&callback=" + cb;
+    document.head.appendChild(s);
+  });
+}
 let searchTimer = null, searchSeq = 0;
 async function searchArtists(q) {
   const seq = ++searchSeq;
@@ -358,11 +734,7 @@ $("addInput").oninput = () => {
   if (q.length < 2) { $("artistResults").hidden = true; return; }
   searchTimer = setTimeout(() => searchArtists(q), 250);
 };
-$("addForm").onsubmit = e => {
-  e.preventDefault();
-  const q = $("addInput").value.trim();
-  if (q.length >= 2) searchArtists(q);
-};
+$("addForm").onsubmit = e => { e.preventDefault(); const q = $("addInput").value.trim(); if (q.length >= 2) searchArtists(q); };
 $("artistResults").onmousedown = e => {
   const li = e.target.closest("li[data-name]"); if (!li) return;
   e.preventDefault();
@@ -372,35 +744,31 @@ $("artistResults").onmousedown = e => {
 $("addInput").onblur = () => setTimeout(() => $("artistResults").hidden = true, 150);
 $("addInput").onkeydown = e => { if (e.key === "Escape") $("artistResults").hidden = true; };
 
-/* discover: collaborators found in loaded songs + a curated list of worship collectives */
+/* discover: curated worship collectives */
 const DISCOVER = [
   "SEU Worship", "Red Rocks Worship", "Gateway Worship", "UPPERROOM", "Rivers & Robots", "Vertical Worship",
   "CityAlight", "Sovereign Grace Music", "Housefires", "Influence Music", "Mosaic MSC", "Life.Church Worship",
   "Circuit Rider Music", "Planetshakers", "VOUS Worship", "North Point Worship", "Cross Worship",
   "Forerunner Music", "Worship Together", "Leeland", "Jon Reddick", "Josh Baldwin", "Bryan & Katie Torwalt",
   "Citipointe Worship", "Shane & Shane", "Kristene DiMarco", "Jenn Johnson", "Chandler Moore", "Naomi Raine",
-  "Cody Carnes", "Hillsong Worship", "Brooke Ligertwood", "Matt Maher", "Josh Baldwin", "All Sons & Daughters",
-  "Kim Walker-Smith", "Sean Feucht", "Tribl", "Bethel Music Kids", "Jesus Image", "Worship Central",
+  "Cody Carnes", "Brooke Ligertwood", "Matt Maher", "All Sons & Daughters",
+  "Kim Walker-Smith", "Tribl", "Jesus Image", "Worship Central",
   "Rend Collective", "Austin Stone Worship", "The Belonging Co", "Hope Darst", "Jonathan & Melissa Helser",
-  "Seacoast Worship", "Christ For The Nations Worship", "Hillsong Kids", "One Voice", "Bethel Music Español"
+  "Seacoast Worship", "Christ For The Nations Worship", "One Voice"
 ];
 let discoverOffset = 0;
 function isChosen(name) { return artists.some(a => a.on && a.name.toLowerCase() === name.toLowerCase()); }
 function collaborators() {
+  // artists credited alongside your picks, from the autocomplete list of the current run
   const counts = new Map();
   const chosen = artists.filter(a => a.on);
-  // remove chosen names first so ones containing "&" (Shane & Shane) aren't split apart
   const strip = s => chosen.reduce((acc, a) => acc.replace(new RegExp(a.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), ","), s);
-  for (const a of chosen) for (const t of cache[a.name] || []) {
-    const feat = (t.title.match(/\((?:feat\.?|with) ([^)]+)\)/i) || [, ""])[1];
-    const names = strip(t.artist + "," + feat).split(/\s*(?:,|&|\s+feat\.?\s+|\s+with\s+)\s*/i);
-    for (let n of names) {
-      n = n.trim();
-      if (n.length < 3 || isChosen(n) || /elevation rhythm|español/i.test(n)) continue;
-      counts.set(n, (counts.get(n) || 0) + 1);
-    }
+  for (const [, artist] of titles) for (let n of strip(artist).split(/\s*(?:,|&)\s*/)) {
+    n = n.trim();
+    if (n.length < 3 || isChosen(n)) continue;
+    counts.set(n, (counts.get(n) || 0) + 1);
   }
-  return [...counts].filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([n]) => n);
+  return [...counts].filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([n]) => n);
 }
 function addChip(el, name) {
   const b = document.createElement("button");
@@ -418,174 +786,242 @@ function renderDiscover() {
   for (let i = 0; i < Math.min(10, rest.length); i++) addChip($("discover"), rest[(discoverOffset + i) % rest.length]);
 }
 $("shuffleBtn").onclick = () => { discoverOffset += 10; renderDiscover(); };
-$("applyBtn").onclick = () => buildPool().then(newRound);
-
-/* ---------- song fetching (iTunes Search API) ---------- */
-// JSONP instead of fetch: Apple rejects CORS from file:// pages (Origin: null)
-let jsonpId = 0;
-function jsonp(url) {
-  return new Promise((resolve, reject) => {
-    const cb = "__psalm" + (++jsonpId);
-    const s = document.createElement("script");
-    const done = () => { delete window[cb]; s.remove(); clearTimeout(timer); };
-    const timer = setTimeout(() => { done(); reject(new Error("timeout")); }, 15000);
-    window[cb] = data => { done(); resolve(data); };
-    s.onerror = () => { done(); reject(new Error("network")); };
-    s.src = url + "&callback=" + cb;
-    document.head.appendChild(s);
-  });
-}
-async function fetchArtist(name) {
-  if (cache[name]) return cache[name];
-  const url = "https://itunes.apple.com/search?" + new URLSearchParams({
-    term: name, entity: "song", attribute: "artistTerm", limit: 200, country: "US"
-  });
-  const data = await jsonp(url);
-  const key = name.toLowerCase();
-  const tracks = data.results.filter(r =>
-    r.previewUrl && r.artistName && r.artistName.toLowerCase().includes(key) &&
-    !/instrumental|karaoke|commentary|spoken|interview|acapella|a cappella/i.test(r.trackName + " " + (r.collectionName || ""))
-  ).map(r => ({
-    title: r.trackName, base: baseTitle(r.trackName), key: norm(r.trackName),
-    artist: r.artistName, year: +r.releaseDate.slice(0, 4), preview: r.previewUrl,
-    art: (r.artworkUrl100 || "").replace("100x100", "300x300"), link: r.trackViewUrl,
-    album: r.collectionName, live: /live/i.test(r.trackName)
-  }));
-  cache[name] = tracks;
-  return tracks;
-}
-
-async function buildPool() {
-  const chosen = artists.filter(a => a.on).map(a => a.name);
-  setPlayable(false);
-  if (!chosen.length) { pool = []; status("Pick at least one artist below.", true); $("poolInfo").textContent = ""; return; }
-  status(`Gathering songs from ${chosen.length} artist${chosen.length > 1 ? "s" : ""}…`);
-  const failed = [];
-  const queue = [...chosen];
-  await Promise.all(Array.from({ length: 4 }, async () => {
-    while (queue.length) {
-      const n = queue.shift();
-      try { await fetchArtist(n); } catch { failed.push(n); }
-    }
-  }));
-  const [lo, hi] = years;
-  const byKey = new Map();
-  for (const n of chosen) for (const t of cache[n] || []) {
-    if (t.year < lo || t.year > hi || !t.key) continue;
-    const prev = byKey.get(t.key);
-    // keep one version per song: prefer studio over live, then the earliest release
-    if (!prev || (prev.live && !t.live) || (prev.live === t.live && t.year < prev.year)) byKey.set(t.key, t);
-  }
-  pool = [...byKey.values()];
-  renderChips(); renderDiscover();
-  $("poolInfo").textContent = `${pool.length} songs · ${lo}–${hi}` + (failed.length ? ` · couldn't load ${failed.join(", ")}` : "");
-  if (!pool.length) status(`No songs from these artists between ${lo} and ${hi}. Widen the years or add artists.`, true);
-}
 
 /* ---------- game ---------- */
 const audio = $("audio");
-let stopTimer = null, raf = null;
+let stopTimer = null, raf = null, clipUrl = null;
+$("eq").innerHTML = "<i></i>".repeat(10);
 
 function status(msg, err) { const s = $("status"); s.textContent = msg; s.className = "status" + (err ? " err" : ""); s.hidden = !msg; }
-function setPlayable(on) { ["playBtn", "guess", "submitBtn", "skipBtn"].forEach(id => $(id).disabled = !on); }
+function showPanel(which) {
+  $("intro").hidden = which !== "intro";
+  $("play").hidden = which !== "play";
+  $("over").hidden = which !== "over";
+}
 
-function newRound() {
+async function startRun() {
+  if (busy) return;
+  busy = true; $("startBtn").disabled = true; $("applyBtn").disabled = true;
   stopAudio();
+  status("Gathering songs…");
+  try {
+    const r = await api("/runs", settings());
+    titles = r.titles; poolCounts = r.counts;
+    delete r.titles; delete r.counts;
+    run = r; shown.score = 0;
+    store.set("run", run.id);
+    renderChips(); renderDiscover();
+    status("");
+    enterRound();
+  } catch (e) {
+    status(e.message, true);
+  } finally {
+    busy = false; $("startBtn").disabled = false; $("applyBtn").disabled = false;
+  }
+  renderHud();
+}
+$("startBtn").onclick = startRun;
+$("applyBtn").onclick = () => {
+  if (run && run.state !== "over" && run.round > 1 && !confirm("Deal new songs? Your current run and its score will end.")) return;
+  startRun();
+};
+$("againBtn").onclick = startRun;
+
+function enterRound() {
+  showPanel("play");
   $("reveal").hidden = true; $("guessRow").hidden = false;
-  if (!pool.length) return;
-  const fresh = pool.filter(s => !recent.includes(s.key));
-  const pick = (fresh.length ? fresh : pool)[Math.floor(Math.random() * (fresh.length ? fresh.length : pool.length))];
-  recent = [pick.key, ...recent].slice(0, Math.min(60, Math.floor(pool.length * 0.7)));
-  store.set("recent", recent);
-  round = { song: pick, stage: 0, guesses: [], done: false };
-  audio.src = pick.preview; audio.load();
   $("guess").value = ""; hideSugg();
-  status("Press play, then guess the title. Each skip or wrong guess unlocks more of the song.");
-  setPlayable(true);
+  $("gameTitle").textContent = "Listen";
   renderRound();
+  loadClip(true);
+  setTimeout(() => $("guess").focus({ preventScroll: true }), 50);
 }
 
 function renderRound() {
-  const r = round;
+  const r = run;
+  $("roundTag").textContent = `Song ${r.round}` + (r.ranked ? ` · ×${r.mult.toFixed(2)}` : " · practice");
+  const reveal = r.state !== "play";
   $("slots").innerHTML = CLIPS.map((c, i) => {
     const g = r.guesses[i];
-    let cls = "slot", txt = "";
-    if (g) { cls += g.type === "right" ? " right" : g.type === "skip" ? " skipped" : " wrong"; txt = g.type === "skip" ? "skipped" : g.text; }
-    else if (i === r.stage && !r.done) cls += " now";
-    return `<div class="${cls}"><span class="t">${c}s</span><span class="g">${esc(txt)}</span></div>`;
+    let cls = "slot";
+    if (g) cls += g.type === "right" ? " right" : g.type === "skip" ? " skipped" : " wrong";
+    else if (i === r.stage && !reveal) cls += " now";
+    const pts = r.ranked ? Math.round(STAGE_PTS[i] * (1 + 0.1 * Math.min(r.streak, 10)) * r.mult) : STAGE_PTS[i];
+    const mark = !g ? pts : g.type === "right" ? "✓" : g.type === "skip" ? "skipped" : "✕";
+    return `<div class="${cls}"><span class="t">${c}s</span><span class="pts">${mark}</span></div>`;
   }).join("");
-  $("log").innerHTML = r.guesses.filter(g => g.type !== "right").map((g, i) =>
-    `<div><span class="n">${CLIPS[i]}s</span><span class="${g.type === "skip" ? "s" : "x"}">${g.type === "skip" ? "Skipped" : "✕ " + esc(g.text)}</span></div>`).join("");
-  const len = r.done ? MAX : CLIPS[r.stage];
+  // skips already show in the slots; list only the wrong titles
+  $("log").innerHTML = r.guesses.map((g, i) => g.type === "wrong" ?
+    `<div><span class="n">${CLIPS[i]}s</span><span class="x">✕ ${esc(g.text)}</span></div>` : "").join("");
+  const len = reveal ? MAX : CLIPS[r.stage];
   $("unlocked").style.width = (len / MAX * 100) + "%";
-  $("clipLen").textContent = r.done ? "Full clip" : `${len}s unlocked`;
+  $("clipLen").textContent = reveal ? "Full clip" : `${len}s unlocked`;
   $("track").querySelectorAll(".tick").forEach(t => t.remove());
   CLIPS.slice(0, -1).forEach(c => { const t = document.createElement("div"); t.className = "tick"; t.style.left = (c / MAX * 100) + "%"; $("track").appendChild(t); });
   $("skipBtn").textContent = r.stage < CLIPS.length - 1 ? `Skip +${CLIPS[r.stage + 1] - CLIPS[r.stage]}s` : "Give up";
 }
 
+// Fetch the clip the server allows for this stage. The browser never holds more than that.
+async function loadClip(autoplay) {
+  const r = run, want = `${r.round}:${r.state === "play" ? r.stage : "full"}`;
+  if (audio.dataset.clip === want) { if (autoplay) playFor(clipSeconds()); return; }
+  stopAudio();
+  $("playBtn").disabled = true;
+  try {
+    const res = await fetch(`${API}/runs/${r.id}/clip?r=${r.round}&s=${r.state === "play" ? r.stage : 0}`);
+    if (!res.ok) throw new Error();
+    const blob = await res.blob();
+    if (run !== r || `${r.round}:${r.state === "play" ? r.stage : "full"}` !== want) return;
+    if (clipUrl) URL.revokeObjectURL(clipUrl);
+    clipUrl = URL.createObjectURL(blob);
+    audio.src = clipUrl; audio.dataset.clip = want; audio.load();
+    $("playBtn").disabled = false;
+    if (autoplay) playFor(clipSeconds());
+  } catch {
+    $("playBtn").disabled = false;
+    status("Couldn't load that clip. Press play to retry.", true);
+    audio.dataset.clip = "";
+  }
+}
+function clipSeconds() { return run.state === "play" ? CLIPS[run.stage] : 30; }
+
+let actx = null, analyser = null;
+function setupAnalyser() {
+  if (analyser || !window.AudioContext) return;
+  try {
+    actx = new AudioContext();
+    const src = actx.createMediaElementSource(audio);
+    analyser = actx.createAnalyser(); analyser.fftSize = 64;
+    src.connect(analyser); analyser.connect(actx.destination);
+  } catch { analyser = null; }
+}
 function stopAudio() {
   audio.pause(); clearTimeout(stopTimer); cancelAnimationFrame(raf);
-  $("prog").style.width = "0";
+  $("prog").style.width = "0"; $("playBtn").classList.remove("playing");
+  [...$("eq").children].forEach(b => b.style.height = "3px");
 }
 function playFor(seconds) {
   stopAudio();
+  setupAnalyser();
+  if (actx && actx.state === "suspended") actx.resume();
   audio.currentTime = 0;
+  const bins = new Uint8Array(32), bars = [...$("eq").children];
   const go = () => audio.play().then(() => {
+    status("");
+    $("playBtn").classList.add("playing");
     const t0 = performance.now();
     const tick = () => {
       const el = Math.min((performance.now() - t0) / 1000, seconds);
       $("prog").style.width = (el / MAX * 100) + "%";
-      if (el < seconds) raf = requestAnimationFrame(tick);
+      if (analyser) { analyser.getByteFrequencyData(bins); bars.forEach((b, i) => b.style.height = (3 + bins[i * 2 + 1] / 255 * 15) + "px"); }
+      if (el < seconds && !audio.paused) raf = requestAnimationFrame(tick);
     };
     tick();
-    stopTimer = setTimeout(() => { audio.pause(); cancelAnimationFrame(raf); }, seconds * 1000);
-  }).catch(() => status("Couldn't play that clip. Try Next song.", true));
+    stopTimer = setTimeout(stopAudio, seconds * 1000);
+  }).catch(() => status("Press play to listen.", false));
   if (audio.readyState >= 3) go();
-  else { audio.addEventListener("canplay", go, { once: true }); }
+  else audio.addEventListener("canplay", go, { once: true });
 }
-$("playBtn").onclick = () => { if (round) playFor(round.done ? 30 : CLIPS[round.stage]); };
+audio.onended = () => stopAudio();
+$("playBtn").onclick = () => { if (!run) return; if (audio.dataset.clip) playFor(clipSeconds()); else loadClip(true); };
 $("fullBtn").onclick = () => playFor(30);
-$("nextBtn").onclick = newRound;
+$("nextBtn").onclick = async () => {
+  if (busy || !run) return;
+  if (run.state === "over") return showOver();
+  busy = true;
+  try { run = await api(`/runs/${run.id}/next`, {}); enterRound(); }
+  catch (e) { status(e.message, true); }
+  finally { busy = false; }
+};
 
-function advance(entry) {
-  round.guesses.push(entry);
-  if (round.stage >= CLIPS.length - 1) return finish(false);
-  round.stage++;
+async function act(kind, text) {
+  if (busy || !run || run.state !== "play") return;
+  busy = true; hideSugg(); $("guess").value = "";
+  const before = run;
+  try {
+    const r = await api(`/runs/${run.id}/${kind}`, kind === "guess" ? { text } : {});
+    run = r;
+    afterAct(before, r);
+  } catch (e) {
+    status(e.message, true);
+    if (e.status === 409) resume(run.id);
+  } finally { busy = false; }
+}
+function afterAct(before, r) {
+  const slot = $("slots").children[before.stage];
+  if (r.result === "right") {
+    flash("glory"); sparks(slot);
+    floatText("+" + r.points.toLocaleString(), slot);
+    const milestone = V.streak[r.streak];
+    if (milestone) setTimeout(() => floatText(`${milestone}!`, $("playBtn"), "var(--good)"), 500);
+  } else if (r.result === "wrong") {
+    flash("shake");
+    status(pick(V.wrong), true);
+  } else {
+    status(pick(V.skip));
+  }
+  if (r.lamp === "refilled") setTimeout(() => floatText("🪔 " + V.lampBack, $("playBtn"), "var(--gold)"), 900);
+  if (r.lamp === "out") status(pick(V.lampOut), true);
+  if (r.state === "play") { renderRound(); loadClip(true); }
+  else showReveal();
+  renderHud();
+}
+
+function showReveal() {
+  const l = run.last, s = l.song;
+  if (run.score > best) { best = run.score; store.set("best", best); }
   renderRound();
-  playFor(CLIPS[round.stage]);
-}
-function submitGuess(text) {
-  if (!round || round.done) return;
-  text = text.trim();
-  if (!text) return;
-  hideSugg(); $("guess").value = "";
-  if (norm(text) === round.song.key) { round.guesses.push({ type: "right", text }); return finish(true); }
-  advance({ type: "wrong", text });
-}
-$("submitBtn").onclick = () => submitGuess(sel >= 0 && suggItems[sel] ? suggItems[sel].base : $("guess").value);
-$("skipBtn").onclick = () => { if (round && !round.done) advance({ type: "skip" }); };
-
-function finish(won) {
-  round.done = true;
-  stats.played++;
-  if (won) { stats.won++; stats.streak++; } else stats.streak = 0;
-  store.set("stats", stats); renderStats();
-  setPlayable(false); $("playBtn").disabled = false;
-  $("guessRow").hidden = true; status("");
-  const s = round.song;
-  $("rvVerdict").textContent = won ? `Got it in ${CLIPS[round.guesses.length - 1]}s` : "Not this time";
-  $("rvVerdict").className = "verdict " + (won ? "win" : "lose");
+  $("guessRow").hidden = true;
+  $("gameTitle").textContent = l.won ? "Hallelujah" : "Selah";
+  $("rvVerdict").textContent = l.won ? `Named in ${CLIPS[l.stage]}s · +${l.points.toLocaleString()}` : `Not this time`;
+  $("rvVerdict").className = "verdict " + (l.won ? "win" : "lose");
   $("rvTitle").textContent = s.title;
-  $("rvMeta").textContent = `${s.artist} · ${s.album} · ${s.year}`;
+  $("rvMeta").textContent = `${s.artist} · ${s.album} · ${s.year} · #${s.rank} most popular`;
+  $("rvVerse").innerHTML = verseHTML(l.won ? pick(V.win[l.stage]) : pick(V.lose));
   $("rvArt").src = s.art; $("rvArt").alt = s.album + " cover";
   $("rvLink").href = s.link;
+  $("nextBtn").textContent = run.state === "over" ? "See your reckoning" : "Next song";
   $("reveal").hidden = false;
-  renderRound();
-  playFor(30);
-  $("nextBtn").focus();
+  loadClip(true);
+  $("nextBtn").focus({ preventScroll: true });
 }
-function renderStats() { $("stPlayed").textContent = stats.played; $("stWon").textContent = stats.won; $("stStreak").textContent = stats.streak; }
+function showOver() {
+  stopAudio();
+  store.set("run", null);
+  showPanel("over");
+  $("gameTitle").textContent = "The reckoning";
+  const tier = V.over.filter(t => run.score >= t[0]).at(-1);
+  $("overTitle").textContent = tier[1];
+  $("overVerse").innerHTML = verseHTML(tier[2]);
+  countTo($("overScore"), 0, run.score);
+  $("oCorrect").textContent = run.correct; $("oStreak").textContent = run.bestStreak;
+  $("oPool").textContent = run.poolSize; $("oMult").textContent = run.mult ? run.mult.toFixed(2) : "0";
+  const canSubmit = run.ranked && run.score > 0 && !run.submitted;
+  $("nameForm").hidden = !canSubmit;
+  $("overStatus").textContent = !run.ranked ? "Practice runs aren't ranked. Choose more songs to compete." :
+    run.score <= 0 ? "No points this time. The last shall be first." : run.submitted ? "Already inscribed." : "";
+  $("nameInput").value = myName;
+  if (canSubmit) setTimeout(() => $("nameInput").focus({ preventScroll: true }), 300);
+  if (run.score >= 5000) sparks($("overScore"), 50);
+}
+$("nameForm").onsubmit = async e => {
+  e.preventDefault();
+  const name = $("nameInput").value.trim();
+  if (!name) return;
+  myName = name; store.set("name", name);
+  $("nameForm").querySelector("button").disabled = true;
+  try {
+    const r = await api(`/runs/${run.id}/submit`, { name });
+    run.submitted = true;
+    $("nameForm").hidden = true;
+    $("overStatus").innerHTML = `Written in the Book of Life at <b>#${r.rank}</b>. ${verseHTML(V.board)}`;
+    myRun = run.id;
+    boardPeriod = "all"; renderBoard(r.top);
+    sparks($("overScore"), 40);
+  } catch (err) {
+    $("overStatus").textContent = err.message;
+  } finally { $("nameForm").querySelector("button").disabled = false; }
+};
 
 /* ---------- autocomplete ---------- */
 let suggItems = [], sel = -1;
@@ -593,12 +1029,11 @@ function hideSugg() { $("sugg").hidden = true; suggItems = []; sel = -1; }
 function showSugg() {
   const q = norm($("guess").value);
   if (q.length < 2) return hideSugg();
-  const seen = new Set();
-  suggItems = pool.filter(s => s.key.includes(q) && !seen.has(s.key) && seen.add(s.key))
-    .sort((a, b) => a.key.indexOf(q) - b.key.indexOf(q)).slice(0, 8);
+  suggItems = titles.map(([t, a]) => ({ t, a, k: norm(t) })).filter(s => s.k.includes(q))
+    .sort((x, y) => x.k.indexOf(q) - y.k.indexOf(q) || x.k.length - y.k.length).slice(0, 8);
   sel = -1;
   if (!suggItems.length) return hideSugg();
-  $("sugg").innerHTML = suggItems.map((s, i) => `<li data-i="${i}">${esc(s.base)}<small>${esc(s.artist)}</small></li>`).join("");
+  $("sugg").innerHTML = suggItems.map((s, i) => `<li data-i="${i}">${esc(s.t)}<small>${esc(s.a)}</small></li>`).join("");
   $("sugg").hidden = false;
 }
 $("guess").oninput = showSugg;
@@ -610,18 +1045,60 @@ $("guess").onkeydown = e => {
     [...$("sugg").children].forEach((li, i) => li.classList.toggle("on", i === sel));
   } else if (e.key === "Enter") {
     e.preventDefault();
-    submitGuess(sel >= 0 ? suggItems[sel].base : $("guess").value);
+    const text = sel >= 0 ? suggItems[sel].t : $("guess").value.trim();
+    if (text) act("guess", text);
   } else if (e.key === "Escape") hideSugg();
 };
 $("sugg").onmousedown = e => {
   const li = e.target.closest("li"); if (!li) return;
-  e.preventDefault(); submitGuess(suggItems[+li.dataset.i].base);
+  e.preventDefault(); act("guess", suggItems[+li.dataset.i].t);
 };
 $("guess").onblur = () => setTimeout(hideSugg, 100);
+$("submitBtn").onclick = () => { const t = sel >= 0 && suggItems[sel] ? suggItems[sel].t : $("guess").value.trim(); if (t) act("guess", t); };
+$("skipBtn").onclick = () => act("skip");
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === " " && run && !$("play").hidden) { e.preventDefault(); $("playBtn").click(); }
+  if (e.key === "Enter" && !$("reveal").hidden && document.activeElement !== $("nextBtn")) $("nextBtn").click();
+});
+
+/* ---------- leaderboard ---------- */
+let boardPeriod = "all", myRun = store.get("myRun", null);
+async function loadBoard() {
+  try { renderBoard((await api(`/leaderboard?period=${boardPeriod}`)).top); }
+  catch { $("board").innerHTML = ""; $("boardEmpty").hidden = false; $("boardEmpty").textContent = "Couldn't reach the leaderboard."; }
+}
+function renderBoard(top) {
+  store.set("myRun", myRun);
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === boardPeriod));
+  $("boardEmpty").hidden = !!top.length;
+  $("boardEmpty").textContent = "No names written yet. Be the first.";
+  $("board").innerHTML = top.map((t, i) =>
+    `<li class="${myName && t.name === myName ? "me" : ""}" style="animation-delay:${i * 30}ms"><span class="nm">${esc(t.name)}<small>${t.correct} songs · ${t.poolSize} pool</small></span><span class="sc">${t.score.toLocaleString()}</span></li>`).join("");
+}
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { boardPeriod = b.dataset.p; loadBoard(); });
 
 /* ---------- boot ---------- */
-renderChips(); renderDiscover(); renderYears(); renderStats();
-buildPool().then(newRound);
+async function resume(id) {
+  try {
+    const r = await api(`/runs/${id}?titles`);
+    titles = r.titles; delete r.titles;
+    run = r; shown.score = r.score;
+    renderHud();
+    if (r.state === "over") { showOver(); return; }
+    showPanel("play");
+    if (r.state === "reveal") { renderRound(); showReveal(); }
+    else enterRound();
+    renderDiscover();
+  } catch {
+    store.set("run", null); run = null; showPanel("intro");
+  }
+}
+$("introLine").innerHTML = verseHTML(pick(V.intro));
+renderChips(); renderDiscover(); renderPop(); renderYears(); renderHud();
+previewPool(); loadBoard();
+const saved = store.get("run", null);
+if (saved) resume(saved); else showPanel("intro");
 </script>
 </body>
 </html>
