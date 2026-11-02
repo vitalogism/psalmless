@@ -87,7 +87,7 @@ p { margin: 0; }
 }
 
 /* ---------- header ---------- */
-.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px 16px; padding: 18px 0 16px; margin-bottom: 24px; border-bottom: 1px solid var(--rule); }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px 16px; padding: 18px 0 16px; margin-bottom: 24px; border-bottom: 1px solid var(--rule); }
 .top .hud { grid-column: 1 / -1; grid-row: 2; }
 @media (min-width: 900px) {
   .top { grid-template-columns: minmax(0, 1fr) auto auto; gap: 24px; padding-top: 32px; margin-bottom: 32px; }
@@ -96,8 +96,6 @@ p { margin: 0; }
 h1 { margin: 0; font: 400 clamp(2.25rem, 8vw, 3rem)/1 var(--display); white-space: nowrap; }
 h1 a { color: inherit; text-decoration: none; border-radius: 4px; }
 h1 .p { color: var(--rubric); }
-.tag { margin-top: 4px; color: var(--muted); font-size: .9375rem; }
-@media (max-width: 520px) { .tag { display: none; } }
 .iconbtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule); background: transparent; display: grid; place-items: center; color: var(--muted); align-self: center; }
 .iconbtn:hover { color: var(--ink); border-color: var(--ink); }
 .iconbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -109,7 +107,6 @@ h1 .p { color: var(--rubric); }
 .cell { display: grid; min-width: 0; }
 .cell dt { font-size: .8125rem; color: var(--muted); }
 .cell dd { margin: 0; font: 500 1.3125rem/1.25 var(--body); font-variant-numeric: lining-nums tabular-nums; }
-.cell dd.sub { font: 400 .8125rem/1.3 var(--body); color: var(--muted); white-space: nowrap; min-height: 1.3em; }
 .lamps { display: flex; gap: 5px; align-items: center; height: 1.64rem; }
 .lamp { width: 14px; height: 20px; }
 .lamp svg { display: block; width: 100%; height: 100%; }
@@ -122,7 +119,6 @@ h1 .p { color: var(--rubric); }
 /* ---------- headings and scripture ---------- */
 .head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 22px; font: 400 1.5rem/1.15 var(--display); }
 .head .v { color: var(--rubric); margin-right: .2em; }
-.head small { font: 400 .9375rem/1.3 var(--body); color: var(--muted); text-align: right; }
 .verse { margin: 0; font: italic 400 1.1875rem/1.4 var(--scripture); max-width: 38ch; }
 .verse cite { display: block; margin-top: 4px; font: normal 400 .8125rem/1.3 var(--body); color: var(--muted); }
 .verse.big { font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.22; text-wrap: balance; }
@@ -136,8 +132,6 @@ h1 .p { color: var(--rubric); }
 .btn.big { min-height: 52px; padding: 12px 28px; font-size: 1.125rem; }
 .btn:disabled { opacity: .45; cursor: default; }
 .btn:active:not(:disabled) { transform: translateY(1px); }
-.kbd { font-size: .75rem; line-height: 1.4; opacity: .65; border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; }
-@media (hover: none), (max-width: 520px) { .kbd { display: none; } }
 .field { min-width: 0; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); font-size: 16px; }
 .field:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
 .linkbtn { background: none; border: 0; padding: 0; font-size: .9375rem; color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
@@ -190,24 +184,19 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 .slot.wrong .t, .slot.skip .t { color: var(--muted); }
 @media (max-width: 380px) { .slots { gap: 4px; } .slot .t { font-size: 1.25rem; } }
 
-.player { display: flex; align-items: center; gap: 16px; }
-.play { flex: none; width: 60px; height: 60px; border-radius: 50%; border: 0; background: var(--ink); color: var(--page); display: grid; place-items: center; }
-.play svg { width: 24px; height: 24px; fill: currentColor; }
+/* play, then the guess and its buttons; on phones the buttons drop to their own row */
+.controls { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.guessrow { display: contents; }
+.play { flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--ink); color: var(--page); display: grid; place-items: center; }
+.play svg { width: 20px; height: 20px; fill: currentColor; }
 .play .replay, .play.done .tri { display: none; }
 .play.done .replay { display: block; }
-.play.playing { background: var(--rubric); color: var(--rubric-ink); }
+.play.prompt { background: var(--rubric); color: var(--rubric-ink); }
 .play:disabled { opacity: .4; cursor: default; }
 .play:active:not(:disabled) { transform: scale(.96); }
-.stakes { display: grid; gap: 2px; min-width: 0; }
-.worth { font: 400 2rem/1.05 var(--display); }
-.worth small { font: 400 .9375rem var(--body); color: var(--muted); margin-left: 6px; }
-.fire { font-size: .9375rem; color: var(--muted); }
-.fire.warn { color: var(--rubric); }
-
-.guessrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 .inwrap { position: relative; display: grid; min-width: 0; }
 .acts2 { display: flex; gap: 8px; }
-@media (max-width: 520px) { .guessrow { grid-template-columns: 1fr; } .acts2 .btn { flex: 1; } }
+@media (max-width: 520px) { .controls { grid-template-columns: auto minmax(0, 1fr); } .acts2 { grid-column: 1 / -1; } .acts2 .btn { flex: 1; } }
 .sugg { position: absolute; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; max-height: 264px; overflow-y: auto; z-index: 5; box-shadow: 0 14px 30px -12px rgb(20 24 34 / .35); }
 .sugg li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 10px; border-radius: 5px; cursor: pointer; }
 .sugg li .tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -217,9 +206,7 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 .sugg li.none { color: var(--muted); cursor: default; background: none; }
 .guesslog { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .guesslog:empty { display: none; }
-.guesslog li { display: flex; gap: 12px; min-width: 0; font-size: .9375rem; color: var(--muted); }
-.guesslog .n { flex: none; width: 2.6em; font-variant-numeric: lining-nums tabular-nums; }
-.guesslog s { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guesslog li { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9375rem; color: var(--muted); text-decoration: line-through; }
 
 /* the reveal is the page's one entrance */
 .reveal { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px 16px; align-items: start; padding-top: 20px; border-top: 1px solid var(--rule); animation: rise .45s cubic-bezier(.2, .9, .3, 1); }
@@ -233,9 +220,7 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 .verdict.lose { color: var(--muted); }
 .reveal h3 { margin: 0; font: 400 1.5rem/1.15 var(--display); text-wrap: balance; }
 @media (min-width: 600px) { .reveal h3 { font-size: 1.75rem; } }
-.meta, .gain span { color: var(--muted); font-size: .9375rem; }
-.gain { font-size: .9375rem; }
-.reveal .verse { font-size: 1.0625rem; margin-top: 4px; }
+.meta { color: var(--muted); font-size: .9375rem; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- results ---------- */
@@ -250,7 +235,6 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 .nameform .field { flex: 1; }
 @media (max-width: 420px) { .nameform { flex-direction: column; } }
 .share { display: grid; gap: 6px; width: 100%; max-width: 520px; }
-.share .label { display: flex; justify-content: space-between; gap: 12px; font-size: .9375rem; color: var(--muted); }
 .share .link { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 4px 4px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
 .share code { flex: 1; min-width: 0; font: .9375rem/1.3 var(--body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .share .btn { min-height: 38px; padding: 6px 12px; }
@@ -277,19 +261,17 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 .side-tabs button, .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); }
 .side-tabs button { padding: 0 0 10px; margin-bottom: -1px; font: 400 1.5rem/1.15 var(--display); }
 .side-tabs .v { color: var(--rubric); margin-right: .2em; }
-@media (min-width: 900px) { .side-tabs { display: flex; } .panel > .head { display: none; } }
+@media (min-width: 900px) { .side-tabs { display: flex; } }
 .side-tabs button[aria-pressed="true"], .tabs button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink); }
 .tabs { display: flex; gap: 14px; font: 400 .9375rem var(--body); }
 .tabs button { padding: 2px 0; }
 .panel { gap: 24px; align-content: start; }
-.panel .head { margin: 0; }
 .label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: .9375rem; color: var(--muted); }
 .group { display: grid; gap: 8px; }
 .knobs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .knob { display: grid; gap: 4px; min-width: 0; align-content: start; }
 .knob .val { font: 400 1.3125rem/1.2 var(--display); white-space: nowrap; }
 .knob .val .dash { color: var(--muted); }
-.ends { display: flex; justify-content: space-between; font-size: .8125rem; color: var(--muted); }
 .range { position: relative; height: 30px; }
 .range .rail, .range .fill { position: absolute; top: 13px; height: 4px; border-radius: 2px; }
 .range .rail { left: 0; right: 0; background: var(--rule); }
@@ -307,7 +289,6 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 @media (min-width: 900px) { .chips.scroll { max-height: 172px; overflow-y: auto; padding-bottom: 14px; mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); } }
 .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 3px 12px; border: 1px solid var(--rule); border-radius: 999px; background: transparent; color: var(--muted); font-size: .9375rem; line-height: 1.3; }
 .chip[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 9%, transparent); border-color: var(--ink); color: var(--ink); }
-.chip .ct { font-size: .8125rem; opacity: .7; font-variant-numeric: lining-nums tabular-nums; }
 .chip.add { border-style: dashed; color: var(--muted); }
 .chip.add:hover { color: var(--ink); border-color: var(--ink); }
 .chip.add b { color: var(--rubric); }
@@ -315,15 +296,12 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 .addrow .field { flex: 1; padding: 8px 12px; }
 .addrow .btn { min-height: 40px; padding: 6px 14px; }
 .foot { display: grid; gap: 12px; justify-items: start; padding-top: 18px; border-top: 1px solid var(--rule); }
-.foot .note { max-width: none; }
 
-.chase { font-size: .9375rem; }
 .board { counter-reset: r; }
 .board li { counter-increment: r; display: grid; grid-template-columns: 2em minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--rule); }
 .board li::before { content: counter(r); text-align: right; color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
 .board li.me { font-weight: 700; }
 .board li.me::before { color: var(--ink); }
-.board li.next::before { color: var(--rubric); font-weight: 700; }
 .board .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- phone nav ---------- */
@@ -339,15 +317,12 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 <body>
 <div class="wrap" id="wrap" data-view="play">
   <header class="top">
-    <div>
-      <h1><a href="./" id="homeLink" aria-label="Psalmless home"><span class="p">P</span>salmless</a></h1>
-      <p class="tag">Name the worship song from the first half-second</p>
-    </div>
+    <h1><a href="./" id="homeLink" aria-label="Psalmless home"><span class="p">P</span>salmless</a></h1>
     <dl class="hud" aria-live="polite">
-      <div class="cell"><dt>Score</dt><dd id="hScore">0</dd><dd class="sub" id="hChase">Best 0</dd></div>
-      <div class="cell"><dt>Streak</dt><dd id="hStreak">0</dd><dd class="sub" id="hBonus"></dd></div>
-      <div class="cell" id="cellLamps"><dt>Lamps</dt><dd class="lamps" id="lamps"></dd><dd class="sub" id="hLampHint">3 lit</dd></div>
-      <div class="cell" id="cellSongs" hidden><dt>Songs</dt><dd id="hSongs">0/5</dd><dd class="sub" id="hSongsHint">Challenge</dd></div>
+      <div class="cell"><dt>Score</dt><dd id="hScore">0</dd></div>
+      <div class="cell"><dt>Streak</dt><dd id="hStreak">0</dd></div>
+      <div class="cell" id="cellLamps"><dt>Lamps</dt><dd class="lamps" id="lamps"></dd></div>
+      <div class="cell" id="cellSongs" hidden><dt>Songs</dt><dd id="hSongs">0/5</dd></div>
     </dl>
     <div class="tools">
       <button class="iconbtn" id="themeBtn" aria-pressed="false" aria-label="Dark mode" title="Dark mode">
@@ -361,25 +336,21 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 
   <div class="cols">
     <section id="game" aria-live="polite">
-      <h2 class="head" id="gameHead"><span><span class="v">℣</span><span id="gameTitle">Listen</span></span><small id="roundTag"></small></h2>
+      <h2 class="head" id="gameHead"><span><span class="v">℣</span><span id="gameTitle">Listen</span></span></h2>
 
       <div class="intro" id="intro">
         <blockquote class="verse big" id="introLine"></blockquote>
-        <p class="lede" id="lede">Hear half a second of a worship song and name it for 1,000 points. Each skip or miss plays a little more, for fewer points.</p>
+        <p class="lede" id="lede">Name the worship song from half a second. Each skip plays a little more, for fewer points.</p>
 
         <div class="chal" id="chalIntro" hidden>
           <h3 class="chal-title" id="chalTitle">A challenge for you</h3>
           <p id="chalLead"></p>
-          <p class="note" id="chalFrom"></p>
-          <div class="go">
-            <button class="btn primary big" id="chalStartBtn" disabled>Take the challenge</button>
-            <p class="note" id="chalMode"></p>
-          </div>
+          <button class="btn primary big" id="chalStartBtn" disabled>Take the challenge</button>
           <details class="more" id="chalHym" open hidden>
-            <summary>Their hymnal: <span id="chalHymLine"></span></summary>
+            <summary>Their hymnal</summary>
             <div>
               <div class="chips ro" id="chalArtists"></div>
-              <button class="btn ghost" id="useHymBtn" type="button" style="justify-self:start">Use these artists in my hymnal</button>
+              <button class="btn ghost" id="useHymBtn" type="button" style="justify-self:start">Use these artists</button>
             </div>
           </details>
         </div>
@@ -401,24 +372,20 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
       <div id="play" hidden>
         <div class="round">
           <ol class="slots" id="slots" aria-label="Clip lengths and points"></ol>
-          <div class="player">
-            <button class="play" id="playBtn" aria-label="Play clip">
+          <div class="controls">
+            <button class="play" id="playBtn" aria-label="Play clip" title="Play (Space)">
               <svg class="tri" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>
               <svg class="replay" viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
             </button>
-            <div class="stakes">
-              <p class="worth" id="worthLine"><span id="worth">1,000</span><small>points if you name it now</small></p>
-              <p class="fire" id="fireTag"></p>
-            </div>
-          </div>
-          <div class="guessrow" id="guessRow">
-            <div class="inwrap">
-              <input class="field" id="guess" type="text" placeholder="Type a song title" aria-label="Song title" autocomplete="off" autocapitalize="off" enterkeyhint="go">
-              <ul class="sugg" id="sugg" hidden></ul>
-            </div>
-            <div class="acts2">
-              <button class="btn primary" id="submitBtn">Guess <span class="kbd">⏎</span></button>
-              <button class="btn" id="skipBtn">Skip</button>
+            <div class="guessrow" id="guessRow">
+              <div class="inwrap">
+                <input class="field" id="guess" type="text" placeholder="Song title" aria-label="Song title" autocomplete="off" autocapitalize="off" enterkeyhint="go">
+                <ul class="sugg" id="sugg" hidden></ul>
+              </div>
+              <div class="acts2">
+                <button class="btn primary" id="submitBtn" title="Guess (Enter)">Guess</button>
+                <button class="btn" id="skipBtn" title="Skip (Shift+Enter)">Skip</button>
+              </div>
             </div>
           </div>
           <ul class="guesslog" id="log"></ul>
@@ -428,12 +395,10 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
               <p class="verdict" id="rvVerdict"></p>
               <h3 id="rvTitle"></h3>
               <p class="meta" id="rvMeta"></p>
-              <p class="gain" id="rvGain"></p>
-              <blockquote class="verse" id="rvVerse"></blockquote>
             </div>
             <div class="acts">
               <button class="btn primary" id="nextBtn">Next song</button>
-              <a class="btn ghost" id="rvLink" href="#" target="_blank" rel="noopener">Open in Apple Music</a>
+              <a class="btn ghost" id="rvLink" href="#" target="_blank" rel="noopener">Apple Music</a>
             </div>
           </div>
         </div>
@@ -443,14 +408,12 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
         <p class="final num" id="overScore">0</p>
         <blockquote class="verse" id="overVerse"></blockquote>
         <div class="strip" id="strip" aria-label="Each song this game"></div>
-        <p class="note" id="overSum"></p>
         <form class="nameform" id="nameForm">
-          <input class="field" id="nameInput" maxlength="20" placeholder="Your name for the leaderboard" aria-label="Your name" autocomplete="nickname">
+          <input class="field" id="nameInput" maxlength="20" placeholder="Your name" aria-label="Your name" autocomplete="nickname">
           <button class="btn primary" type="submit">Add to leaderboard</button>
         </form>
         <p class="note" id="overStatus"></p>
         <div class="share" id="share" hidden>
-          <p class="label"><span>Send this challenge</span><span id="shareSub"></span></p>
           <div class="link"><code id="shareUrl"></code><button class="btn primary" id="copyBtn" type="button">Copy link</button><button class="btn ghost" id="shareBtn" type="button" hidden>Share</button></div>
         </div>
         <ol class="compare" id="compare" hidden></ol>
@@ -472,15 +435,12 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
       </div>
 
       <section class="panel" data-panel="hymnal" id="settings">
-        <h2 class="head"><span><span class="v">℟</span>Your hymnal</span></h2>
-
         <div class="knobs">
           <div class="knob">
             <div class="label">Popularity</div>
             <div class="val" id="popLabel"></div>
             <div class="range single"><div class="rail"></div><div class="fill" id="popFill" style="left:0"></div>
               <input type="range" id="pop" min="0" max="4" step="1" aria-label="Popularity"></div>
-            <div class="ends"><span>Hits</span><span>Deep cuts</span></div>
           </div>
           <div class="knob">
             <div class="label">Years</div>
@@ -501,8 +461,7 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
         </div>
 
         <div class="group">
-          <div class="label"><span id="selCount">0 artists</span>
-            <span><button class="linkbtn" id="allBtn">All</button>, <button class="linkbtn" id="noneBtn">none</button>, <button class="linkbtn" id="resetBtn">reset</button></span></div>
+          <div class="label"><span id="selCount"></span><span><button class="linkbtn" id="allBtn">All</button>, <button class="linkbtn" id="noneBtn">none</button>, <button class="linkbtn" id="resetBtn">reset</button></span></div>
           <div class="chips scroll" id="chips"></div>
         </div>
 
@@ -510,30 +469,23 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
           <summary>Add artists</summary>
           <div>
             <form class="addrow" id="addForm">
-              <input class="field" id="addInput" type="text" placeholder="Search Apple Music, e.g. SEU Worship" aria-label="Search for an artist" autocomplete="off">
-              <button class="btn ghost" type="submit">Search</button>
+              <input class="field" id="addInput" type="search" placeholder="Search artists" aria-label="Search artists" autocomplete="off" enterkeyhint="search">
               <ul class="sugg" id="artistResults" hidden></ul>
             </form>
-            <p class="note" id="featHint" hidden>Featured on songs by your picks</p>
-            <div class="chips" id="featured"></div>
-            <div class="label"><span>Worship collectives</span><button class="linkbtn" id="shuffleBtn">Show others</button></div>
             <div class="chips" id="discover"></div>
           </div>
         </details>
 
         <div class="foot">
           <p id="poolInfo">Counting songs…</p>
-          <p class="note" id="multHint"></p>
           <button class="btn" id="applyBtn">Play this hymnal</button>
         </div>
       </section>
 
       <section class="panel" data-panel="board" id="boardBox">
-        <h2 class="head"><span>Leaderboard</span></h2>
         <div class="tabs"><button data-p="all" aria-pressed="true">All time</button><button data-p="week" aria-pressed="false">This week</button></div>
-        <p class="chase" id="chase" hidden></p>
         <ol class="board" id="board"></ol>
-        <p class="note" id="boardEmpty" hidden>No scores yet. Finish a ranked game to be the first.</p>
+        <p class="note" id="boardEmpty" hidden>No scores yet.</p>
       </section>
     </div>
   </div>
@@ -567,19 +519,12 @@ const ARTISTS = [
 ];
 const DEFAULT_ON = ["Elevation Worship", "Hillsong Worship", "Bethel Music", "Chris Tomlin", "Phil Wickham",
   "Lauren Daigle", "for KING & COUNTRY", "Casting Crowns", "MercyMe", "Maverick City Music", "Brandon Lake", "Crowder"];
-// phrase reads inside a sentence: "212 songs: the top 10 per artist, 1965–2026"
-const POP_STEPS = [
-  { phrase: "the top 3 per artist",  label: "Signature songs" },
-  { phrase: "the top 10 per artist", label: "Radio hits" },
-  { phrase: "the top 25 per artist", label: "Fan favorites" },
-  { phrase: "the top 60 per artist", label: "Deep cuts" },
-  { phrase: "every song",            label: "Everything" }
-];
+const POP_STEPS = ["Signature songs", "Radio hits", "Fan favorites", "Deep cuts", "Everything"];
 const DEFAULT_POP = 1, DEFAULT_YEARS = [1965, THIS_YEAR];
 const SET_SIZES = [5, 10, 15, 20];
 const MODE_DESC = {
-  survival: "Play until your three lamps go out. Five right in a row relights one. Ranked games go on the leaderboard.",
-  set: "A fixed set of songs, easy to hard. When you finish, send the link to friends and compare scores."
+  survival: "Play until your three lamps go out.",
+  set: "A set of songs to send to friends."
 };
 
 /* ---------- scripture ---------- */
@@ -591,25 +536,6 @@ const V = {
     ["Speak to one another with psalms, hymns, and songs from the Spirit.", "Ephesians 5:19"],
     ["He put a new song in my mouth, a hymn of praise to our God.", "Psalm 40:3"]
   ],
-  win: [
-    [["Before they call I will answer.", "Isaiah 65:24"], ["Loaves and fishes. A miracle."], ["Seventy times seven? One was enough."], ["Like David before Saul, one note did it."]],
-    [["My sheep hear my voice, and I know them.", "John 10:27"], ["Quick as Peter's sword."], ["The first shall be first."]],
-    [["Seek and ye shall find.", "Matthew 7:7"], ["Your ear is tuned like a Levite's harp."], ["The third day, as foretold."]],
-    [["Ask and it will be given to you.", "Matthew 7:7"], ["Found, like the lost coin."], ["Steady as Nehemiah's wall."]],
-    [["Knock and the door will be opened.", "Matthew 7:7"], ["Like Jacob, you wrestled and prevailed."], ["The laborer hired at the eleventh hour still gets paid."]],
-    [["They that wait upon the LORD shall renew their strength.", "Isaiah 40:31"], ["By the skin of your teeth.", "Job 19:20"], ["Better late than a lukewarm guess."]]
-  ],
-  lose: [
-    ["For now we see through a glass, darkly.", "1 Corinthians 13:12"],
-    ["They have ears, but hear not.", "Psalm 115:6"],
-    ["Be still, and know. Then guess better next time.", "Psalm 46:10"],
-    ["Even Peter denied Him three times."],
-    ["The spirit is willing, but the ear is weak.", "Matthew 26:41"],
-    ["Thomas needed to see it too."],
-    ["All we like sheep have gone astray.", "Isaiah 53:6"]
-  ],
-  wrong: ["Not quite, Thomas.", "A false prophet!", "Not that one.", "Scribes and Pharisees!", "Wrong psalm.", "Selah. Try again.", "Close, but no manna."],
-  skip: ["Be still…", "Patience, Job.", "Wait upon the LORD…", "More light…", "Selah."],
   over: [
     [0, "Dust to dust", ["For dust you are, and to dust you shall return.", "Genesis 3:19"]],
     [1500, "Mustard seed", ["Faith as small as a mustard seed can move mountains.", "Matthew 17:20"]],
@@ -628,8 +554,6 @@ const store = {
   set(k, v) { try { localStorage.setItem("psalmless:" + k, JSON.stringify(v)); } catch {} }
 };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const yearSpan = (a, b) => `${a}\u2060–\u2060${b}`;
-const ordinal = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
 function norm(t) {
   return t.replace(/\s*[\(\[].*?[\)\]]/g, "").replace(/\s+-\s+.*$/, "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/&/g, "and").replace(/[^a-z0-9 ]/g, "").replace(/^the /, "").replace(/\s+/g, " ").trim();
@@ -638,7 +562,6 @@ function norm(t) {
 let artists = store.get("artists", ARTISTS.map(n => ({ name: n, on: DEFAULT_ON.includes(n) })));
 let years = store.get("years", DEFAULT_YEARS);
 let popIdx = store.get("pop2", DEFAULT_POP);
-let best = store.get("best", 0);
 let myName = store.get("name", "");
 let sfxOn = store.get("sfx", true);
 let mode = store.get("mode", "survival");    // survival | set
@@ -736,15 +659,10 @@ function renderHud() {
   const inSet = !!(run && run.mode === "set");
   $("hScore").textContent = score.toLocaleString();
   $("hStreak").textContent = streak;
-  const bonus = Math.min(streak, 10) * 10;
-  $("hBonus").textContent = bonus ? `+${bonus}% points` : "";
-  const rivals = chalInfo && chalInfo.results ? chalInfo.results.length : 0;
-  $("hChase").textContent = inSet && run.state === "over" ? "Final" : inSet || (!run && chal) ? (rivals ? `${rivals} to beat` : "Set the bar") :
-    run && score && run.state !== "over" && score >= best ? "New best" : `Best ${best.toLocaleString()}`;
   $("wrap").dataset.chal = chal || inSet ? "1" : "";
   $("cellLamps").hidden = inSet || !!chal; $("cellSongs").hidden = !inSet && !chal;
-  if (inSet) { $("hSongs").textContent = `${Math.min(run.round, run.poolSize)}/${run.poolSize}`; $("hSongsHint").textContent = run.state === "over" ? "Finished" : run.round < run.poolSize ? `${run.poolSize - run.round} to go` : "Last song"; }
-  else if (chal) { $("hSongs").textContent = chalInfo ? `0/${chalInfo.size}` : "–"; $("hSongsHint").textContent = "Challenge"; }
+  if (inSet) $("hSongs").textContent = `${Math.min(run.round, run.poolSize)}/${run.poolSize}`;
+  else if (chal) $("hSongs").textContent = chalInfo ? `0/${chalInfo.size}` : "–";
   const lives = run && !inSet ? run.lives : LIVES;
   [...$("lamps").children].forEach((l, i) => {
     const out = i >= lives;
@@ -752,8 +670,6 @@ function renderHud() {
     if (!out && l.classList.contains("out")) { l.classList.add("relit"); setTimeout(() => l.classList.remove("relit"), 700); }
     l.classList.toggle("out", out);
   });
-  $("hLampHint").textContent = !run || run.state === "over" ? `${lives} lit` : lives === 1 ? "Last one" :
-    streak && lives < LIVES ? `Relight at ${Math.ceil((streak + 1) / 5) * 5}` : `${lives} lit`;
 }
 
 /* ---------- hymnal settings ---------- */
@@ -764,8 +680,7 @@ function renderChips() {
     const b = document.createElement("button");
     b.className = "chip";
     b.setAttribute("aria-pressed", a.on);
-    const n = poolCounts[a.name];
-    b.innerHTML = esc(a.name) + (a.on && n !== undefined ? ` <span class="ct">${n}</span>` : "");
+    b.textContent = a.name;
     b.onclick = () => { a.on = !a.on; saveSettings(); renderChips(); };
     el.appendChild(b);
   });
@@ -781,7 +696,7 @@ function renderYears() {
 }
 function renderPop() {
   $("pop").value = popIdx;
-  $("popLabel").textContent = POP_STEPS[popIdx].label;
+  $("popLabel").textContent = POP_STEPS[popIdx];
   $("popFill").style.width = (popIdx / 4 * 100) + "%";
 }
 function saveSettings() { store.set("artists", artists); store.set("years", years); store.set("pop2", popIdx); previewPool(); }
@@ -811,7 +726,7 @@ function addArtist(name) {
 }
 
 /* pool preview */
-let poolCounts = {}, previewTimer = null, previewSeq = 0;
+let previewTimer = null, previewSeq = 0;
 function previewPool() {
   clearTimeout(previewTimer);
   $("poolInfo").textContent = "Counting songs…";
@@ -860,30 +775,23 @@ async function teach(names) {
 let lastPool = null;
 function showPool(p) {
   lastPool = p;
-  poolCounts = p.counts; renderChips(); renderDiscover();
+  renderDiscover();
   const missing = p.missing.filter(n => failedArtists.has(n));
   const loading = p.missing.filter(n => !failedArtists.has(n));
-  $("poolInfo").textContent = `${p.size.toLocaleString()} songs: ${POP_STEPS[popIdx].phrase}, ${yearSpan(years[0], years[1])}.` +
+  $("poolInfo").textContent = poolLine(p) + "." +
     (loading.length ? ` Loading ${loading.length} more artist${loading.length > 1 ? "s" : ""}…` : "") +
     (missing.length ? ` No songs found for ${missing.join(", ")}.` : "");
-  $("multHint").textContent = p.mult ? `Ranked, points ×${p.mult.toFixed(2)}. Bigger, more varied hymnals score higher.` :
-    `Practice only. Ranked games need at least ${p.minRanked} songs.`;
   renderMode();
 }
+const poolLine = p => `${p.size.toLocaleString()} songs` + (!p.size ? "" : p.mult ? `, ranked ×${p.mult.toFixed(2)}` : ", practice only");
 function renderMode() {
-  if (chal) {
-    $("chalStartBtn").disabled = !chalInfo;
-    $("chalMode").textContent = chalInfo ? `${chalInfo.size} songs, easy to hard. Points ×${chalInfo.mult.toFixed(2)}.` : "Opening the challenge…";
-    return;
-  }
+  if (chal) { $("chalStartBtn").disabled = !chalInfo; return; }
   const p = lastPool;
   if (!p) { $("modeLine").textContent = "Counting songs…"; return; }
   const enough = mode === "set" ? p.size >= setSize : p.size > 0;
   $("startBtn").disabled = !enough;
-  $("modeLine").textContent = !p.size ? "No songs match. Adjust your hymnal." :
-    mode === "set" ? (enough ? `${setSize} of ${p.size.toLocaleString()} songs, easy to hard. Points ×${p.mult.toFixed(2)}.` : `Only ${p.size} songs match. A set of ${setSize} needs more; widen your hymnal.`) :
-    p.mult ? `Ranked: ${p.size.toLocaleString()} songs, points ×${p.mult.toFixed(2)}.` :
-    `Practice: ${p.size} songs. Add artists for a ranked game.`;
+  $("modeLine").textContent = !p.size ? "No songs match. Widen your hymnal." :
+    !enough ? `Only ${p.size} songs match. Widen your hymnal.` : mode === "set" ? "" : poolLine(p);
 }
 
 /* artist search */
@@ -911,7 +819,7 @@ async function searchArtists(q) {
     if (!res.length) { list.innerHTML = `<li class="none">No artists found for “${esc(q)}”</li>`; list.hidden = false; return; }
     list.innerHTML = res.map(r => {
       const have = artists.some(a => a.name.toLowerCase() === r.artistName.toLowerCase() && a.on);
-      return `<li data-name="${esc(r.artistName)}">${esc(r.artistName)}<small>${have ? "In your hymnal" : esc(r.primaryGenreName || "")}</small></li>`;
+      return `<li data-name="${esc(r.artistName)}">${esc(r.artistName)}${have ? "<small>✓</small>" : ""}</li>`;
     }).join("");
     list.hidden = false;
   } catch {
@@ -966,15 +874,20 @@ function addChip(el, name) {
   b.onclick = () => addArtist(name);
   el.appendChild(b);
 }
+// suggestions: artists featured on your picks' songs first, then worship collectives, ten at a time
 function renderDiscover() {
-  const feat = collaborators();
-  $("featured").innerHTML = ""; feat.forEach(n => addChip($("featured"), n));
-  $("featHint").hidden = !feat.length; $("featured").hidden = !feat.length;
+  const feat = collaborators(), el = $("discover");
   const rest = [...new Set(DISCOVER)].filter(n => !isChosen(n) && !feat.includes(n));
-  $("discover").innerHTML = "";
-  for (let i = 0; i < Math.min(10, rest.length); i++) addChip($("discover"), rest[(discoverOffset + i) % rest.length]);
+  el.innerHTML = "";
+  feat.forEach(n => addChip(el, n));
+  for (let i = 0; i < Math.min(10, rest.length); i++) addChip(el, rest[(discoverOffset + i) % rest.length]);
+  if (rest.length > 10) {
+    const more = document.createElement("button");
+    more.className = "chip add"; more.textContent = "More";
+    more.onclick = () => { discoverOffset += 10; renderDiscover(); };
+    el.appendChild(more);
+  }
 }
-$("shuffleBtn").onclick = () => { discoverOffset += 10; renderDiscover(); };
 
 /* ---------- game ---------- */
 const audio = $("audio");
@@ -983,7 +896,7 @@ let raf = null, clipUrl = null, playSeq = 0;
 // transient: a player-facing hint that playback may clear (feedback lines stay until the next action)
 function status(msg, err, transient) { const s = $("status"); s.textContent = msg; s.className = "status" + (err ? " err" : ""); s.dataset.t = transient ? "1" : ""; }
 function showPanel(which) {
-  if (which === "intro") { $("gameTitle").textContent = "Listen"; $("roundTag").textContent = ""; }
+  if (which === "intro") $("gameTitle").textContent = "Listen";
   $("gameHead").hidden = which === "intro" && !!chal;
   $("intro").hidden = which !== "intro";
   $("play").hidden = which !== "play";
@@ -1004,7 +917,7 @@ async function startRun() {
     if (chal) r = await api("/runs", { set: chal });
     else if (mode === "set") { const made = await api("/sets", { ...settings(), size: setSize }); r = await api("/runs", { set: made.id }); }
     else r = await api("/runs", settings());
-    titles = r.titles; if (Object.keys(r.counts || {}).length) poolCounts = r.counts;
+    titles = r.titles;
     delete r.titles; delete r.counts;
     run = r;
     store.set("run", run.id); store.set("runSet", r.mode === "set" ? r.setId : null);
@@ -1051,7 +964,7 @@ $("useHymBtn").onclick = () => {
   $("yMin").value = years[0]; $("yMax").value = years[1];
   renderYears(); renderPop(); renderChips(); renderDiscover(); saveSettings();
   const b = $("useHymBtn"); b.textContent = "Added to your hymnal"; b.disabled = true;
-  setTimeout(() => { b.textContent = "Use these artists in my hymnal"; b.disabled = false; }, 2500);
+  setTimeout(() => { b.textContent = "Use these artists"; b.disabled = false; }, 2500);
 };
 function leaveChallenge() {
   chal = null; chalInfo = null; run = null; store.set("run", null);
@@ -1076,25 +989,14 @@ function stagePts(r, i) { return r.ranked ? Math.round(STAGE_PTS[i] * (1 + 0.1 *
 // The six clips are one strip: each cell shows its points, then its result, and fills as that stretch of audio plays.
 function renderRound() {
   const r = run, reveal = r.state !== "play";
-  $("roundTag").textContent = `Song ${r.round} of ${r.poolSize.toLocaleString()}` + (r.mode === "set" ? "" : r.ranked ? `, ranked ×${r.mult.toFixed(2)}` : ", practice");
   $("slots").innerHTML = CLIPS.map((c, i) => {
     const g = r.guesses[i];
     const cls = g ? (g.type === "right" ? "right" : g.type === "skip" ? "skip" : "wrong") : i === r.stage && !reveal ? "now" : i > r.stage && !reveal ? "later" : "";
     const note = g ? (g.type === "right" ? "✓" : g.type === "skip" ? "skip" : "✕") : reveal ? "&nbsp;" : stagePts(r, i).toLocaleString();
     return `<li class="slot ${cls}"><i class="fill"></i><span class="t">${c}<small>s</small></span><span class="pts">${note}</span></li>`;
   }).join("");
-  $("log").innerHTML = r.guesses.map((g, i) => g.type === "wrong" ?
-    `<li><span class="n">${CLIPS[i]}s</span><s>${esc(g.text)}</s></li>` : "").join("");
-  $("skipBtn").innerHTML = r.stage < CLIPS.length - 1 ? `Skip +${CLIPS[r.stage + 1] - CLIPS[r.stage]}s <span class="kbd">⇧⏎</span>` : `${r.mode === "set" ? "Pass" : "Give up"} <span class="kbd">⇧⏎</span>`;
-  $("worthLine").hidden = reveal;
-  $("fireTag").classList.remove("warn");
-  if (reveal) { $("fireTag").textContent = "Play the full preview."; return; }
-  $("worth").textContent = stagePts(r, r.stage).toLocaleString();
-  const next = r.stage < CLIPS.length - 1 ? stagePts(r, r.stage + 1) : 0;
-  const lastLamp = r.mode !== "set" && r.lives === 1;
-  $("fireTag").textContent = lastLamp ? "Your last lamp is lit." : r.streak >= 3 ? `Includes +${Math.min(r.streak, 10) * 10}% for your streak.` :
-    next ? `A skip drops it to ${next.toLocaleString()}.` : "Last chance.";
-  $("fireTag").classList.toggle("warn", lastLamp);
+  $("log").innerHTML = r.guesses.map(g => g.type === "wrong" ? `<li>${esc(g.text)}</li>` : "").join("");
+  $("skipBtn").textContent = r.stage < CLIPS.length - 1 ? "Skip" : r.mode === "set" ? "Pass" : "Give up";
 }
 function paintProgress(t) {
   [...$("slots").children].forEach((li, i) => {
@@ -1129,7 +1031,7 @@ function clipSeconds() { return run.state === "play" ? CLIPS[run.stage] : 30; }
 function stopAudio() {
   playSeq++;
   audio.pause(); cancelAnimationFrame(raf);
-  paintProgress(0); $("playBtn").classList.remove("playing");
+  paintProgress(0);
 }
 // The server cuts each clip to length, so playback runs to the end of the file and the strip
 // follows the audio's own clock. play() is called straight away: iOS loads nothing until it is,
@@ -1138,9 +1040,10 @@ function playFor(seconds) {
   stopAudio();
   const mine = playSeq;
   try { audio.currentTime = 0; } catch {}
-  $("playBtn").classList.add("playing"); $("playBtn").classList.remove("done");
+  $("playBtn").classList.remove("done");
   audio.play().then(() => {
     if (mine !== playSeq) return;
+    $("playBtn").classList.remove("prompt");
     if ($("status").dataset.t) status("");
     const tick = () => {
       if (mine !== playSeq) return;
@@ -1150,9 +1053,9 @@ function playFor(seconds) {
     };
     tick();
   }).catch(e => {
+    // the browser wants a tap first: the play button turns red to ask for one
     if (mine !== playSeq || (e && e.name === "AbortError")) return;
-    $("playBtn").classList.remove("playing");
-    status("Press play to listen.", false, true);
+    $("playBtn").classList.add("prompt");
   });
 }
 audio.onended = () => { stopAudio(); $("playBtn").classList.add("done"); };
@@ -1198,41 +1101,24 @@ function afterAct(before, r) {
   else if (r.result === "wrong") { sfx("wrong"); buzz(80); }
   if (r.lamp === "refilled") setTimeout(() => sfx("relit"), 500);
   if (r.lamp === "out") { sfx("lamp"); buzz([60, 60, 120]); }
-  if (r.state === "play") {
-    status(r.result === "wrong" ? pick(V.wrong) : pick(V.skip), r.result === "wrong");
-    renderRound(); loadClip(true);
-  } else { status(""); showReveal(before); }
+  status("");
+  if (r.state === "play") { renderRound(); loadClip(true); }
+  else showReveal();
   renderHud();
 }
 
-function showReveal(before) {
+function showReveal() {
   const l = run.last, s = l.song;
-  if (run.mode !== "set" && run.score > best) { best = run.score; store.set("best", best); }
   renderRound();
   $("guessRow").hidden = true;
   $("gameTitle").textContent = l.won ? "Hallelujah" : "Selah";
-  $("rvVerdict").textContent = l.won ? `Named in ${CLIPS[l.stage]}s` : "Not this time";
+  $("rvVerdict").textContent = !l.won ? "Missed" : `Named in ${CLIPS[l.stage]}s` + (l.points ? ` for ${l.points.toLocaleString()} points` : "");
   $("rvVerdict").className = "verdict " + (l.won ? "win" : "lose");
   $("rvTitle").textContent = s.title;
-  $("rvMeta").textContent = `${s.artist}${s.album ? `, from ${s.album}` : ""}${s.year ? ` (${s.year})` : ""}. ` +
-    (s.rank === 1 ? "Their most popular song." : `Their ${ordinal(s.rank)} most popular song.`);
-  $("rvVerse").innerHTML = verseHTML(l.won ? pick(V.win[l.stage]) : pick(V.lose));
+  $("rvMeta").textContent = s.year ? `${s.artist}, ${s.year}` : s.artist;
   $("rvArt").src = s.art; $("rvArt").alt = s.album ? `${s.album} cover` : "";
   $("rvLink").href = s.link;
-  $("nextBtn").innerHTML = run.state === "over" ? "See your results" : `Next song <span class="kbd">⏎</span>`;
-  // what the round was worth, in one line
-  let gain;
-  if (l.won && l.points) {
-    const streakBefore = Math.min(before ? before.streak : Math.max(0, run.streak - 1), 10);
-    const parts = [`${STAGE_PTS[l.stage].toLocaleString()} for ${CLIPS[l.stage]}s`];
-    if (streakBefore) parts.push(`+${streakBefore * 10}% streak`);
-    if (run.mult !== 1) parts.push(`×${run.mult.toFixed(2)} pool`);
-    gain = `<b>+${l.points.toLocaleString()} points</b> <span>${esc(parts.join(", "))}.</span>`;
-    if (run.lamp === "refilled") gain += ` <span>Five in a row relit a lamp.</span>`;
-  } else if (l.won) gain = `<span>Practice games don't score.</span>`;
-  else if (run.mode === "set") { const left = run.poolSize - run.round; gain = `<span>Streak reset. ${left ? `${left} song${left === 1 ? "" : "s"} left.` : "That was the last song."}</span>`; }
-  else gain = `<span>Streak reset. ${run.lives ? `A lamp went out; ${run.lives} left.` : "Your last lamp went out."}</span>`;
-  $("rvGain").innerHTML = gain;
+  $("nextBtn").textContent = run.state === "over" ? "See results" : "Next song";
   $("reveal").hidden = false;
   loadClip(true);
   $("nextBtn").focus({ preventScroll: true });
@@ -1247,12 +1133,9 @@ function showOver() {
   const inSet = run.mode === "set";
   const tier = V.over.filter(t => run.score >= t[0]).at(-1);
   $("gameTitle").textContent = inSet ? `${run.correct} of ${run.poolSize} named` : tier[1];
-  $("roundTag").textContent = inSet ? "Challenge" : run.ranked ? `Ranked ×${run.mult.toFixed(2)}` : "Practice";
   $("overVerse").innerHTML = verseHTML(tier[2]);
   $("overScore").textContent = run.score.toLocaleString();
   $("strip").innerHTML = stripCells(run.history || []);
-  $("overSum").textContent = inSet ? `Best streak ${run.bestStreak}. Points ×${run.mult.toFixed(2)}.` :
-    `${run.correct} named, best streak ${run.bestStreak}, from ${run.poolSize.toLocaleString()} songs` + (run.mult ? ` at ×${run.mult.toFixed(2)}.` : ".");
   $("share").hidden = true; $("compare").hidden = true; $("songsBox").hidden = true;
   $("newSetBtn").hidden = !inSet; $("seeBoardBtn").hidden = inSet;
   const canSubmit = inSet ? !run.submitted : run.ranked && run.score > 0 && !run.submitted;
@@ -1260,10 +1143,8 @@ function showOver() {
   $("againBtn").className = "btn" + (inSet ? " ghost" : canSubmit ? "" : " primary");
   $("nameForm").hidden = !canSubmit;
   $("nameForm").querySelector("button").textContent = inSet ? "Save and get the link" : "Add to leaderboard";
-  $("nameInput").placeholder = inSet ? "Your name, so friends know who to beat" : "Your name for the leaderboard";
-  $("overStatus").textContent = inSet ? (run.submitted ? "" : "Add your name to save your score and get the link.") :
-    !run.ranked ? "Practice games aren't ranked. Add more songs to your hymnal to compete." :
-    run.score <= 0 ? "No points this time. The last shall be first." : run.submitted ? "Already on the leaderboard." : "";
+  $("overStatus").textContent = inSet ? "" : !run.ranked ? "Practice games aren't ranked." :
+    run.score <= 0 ? "No points this time." : run.submitted ? "Already on the leaderboard." : "";
   $("nameInput").value = myName;
   if (canSubmit) setTimeout(() => $("nameInput").focus({ preventScroll: true }), 300);
   if (inSet) showSetResults();
@@ -1286,7 +1167,6 @@ async function showSetResults(fresh) {
     let res = (info.results || []).filter(r => typeof r.score === "number");
     // until you save, you appear as an unnamed row so you can see where you'd land
     if (!run.submitted) res = [...res, { run: run.id, name: "You", score: run.score, detail: run.history || [], pending: true }].sort((a, b) => b.score - a.score);
-    $("shareSub").textContent = res.length > 1 ? `${res.length} have played` : "You're the first";
     $("compare").innerHTML = res.map((r, i) => `<li class="${r.run === run.id ? "me" : ""}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.run === run.id && !r.pending ? "<small>you</small>" : ""}</span><span class="sc">${r.score.toLocaleString()}</span><div class="strip mini">${stripCells(r.detail)}</div></li>`).join("");
     $("compare").hidden = !res.length;
     if (info.songs) {
@@ -1307,8 +1187,6 @@ $("nameForm").onsubmit = async e => {
     run.submitted = true;
     $("nameForm").hidden = true;
     if (run.mode === "set") {
-      const n = r.results.length;
-      $("overStatus").textContent = n === 1 ? "Saved. Send the link and see how your friends do." : `Saved. You're #${r.rank} of ${n} on this challenge.`;
       showSetResults({ results: r.results, songs: (await api(`/sets/${run.setId}?run=${run.id}`)).songs });
       return;
     }
@@ -1371,24 +1249,14 @@ document.addEventListener("keydown", e => {
 let boardPeriod = "all";
 async function loadBoard() {
   try { renderBoard((await api(`/leaderboard?period=${boardPeriod}`)).top); }
-  catch { $("board").innerHTML = ""; $("chase").hidden = true; $("boardEmpty").hidden = false; $("boardEmpty").textContent = "Couldn't reach the leaderboard. Check your connection and try again."; }
+  catch { $("board").innerHTML = ""; $("boardEmpty").hidden = false; $("boardEmpty").textContent = "Couldn't reach the leaderboard. Check your connection."; }
 }
 function renderBoard(top) {
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === boardPeriod));
   $("boardEmpty").hidden = !!top.length;
-  $("boardEmpty").textContent = "No scores yet. Finish a ranked game to be the first.";
-  // the entry your best would land just below, so there is something concrete to chase
-  const mine = myName ? top.findIndex(t => t.name === myName) : -1;
-  const target = top.findIndex(t => t.score > best);
-  const chaseIdx = mine >= 0 ? mine - 1 : target >= 0 ? [...top].map((t, i) => i).filter(i => top[i].score > best).at(-1) : -1;
-  $("board").innerHTML = top.map((t, i) =>
-    `<li class="${myName && t.name === myName ? "me" : i === chaseIdx ? "next" : ""}"><span class="nm">${esc(t.name)}<small>${t.correct} of ${t.poolSize.toLocaleString()}</small></span><span class="sc">${t.score.toLocaleString()}</span></li>`).join("");
-  const c = $("chase");
-  c.hidden = false;
-  if (mine === 0) c.textContent = "You hold the top spot.";
-  else if (chaseIdx >= 0 && top[chaseIdx]) c.textContent = `${(top[chaseIdx].score - best + 1).toLocaleString()} more points to pass ${top[chaseIdx].name} at #${chaseIdx + 1}. Your best is ${best.toLocaleString()}.`;
-  else if (top.length && best > top[0].score) c.textContent = "Your best beats every score here. Add your next ranked game.";
-  else c.hidden = true;
+  $("boardEmpty").textContent = "No scores yet.";
+  $("board").innerHTML = top.map(t =>
+    `<li class="${myName && t.name === myName ? "me" : ""}"><span class="nm">${esc(t.name)}</span><span class="sc">${t.score.toLocaleString()}</span></li>`).join("");
 }
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { boardPeriod = b.dataset.p; loadBoard(); });
 
@@ -1402,7 +1270,7 @@ async function resume(id) {
     renderHud();
     if (r.state === "over") { showOver(); return; }
     showPanel("play");
-    if (r.state === "reveal") { renderRound(); showReveal(null); }
+    if (r.state === "reveal") showReveal();
     else enterRound();
     renderDiscover();
   } catch {
@@ -1411,20 +1279,16 @@ async function resume(id) {
 }
 async function openChallenge(id) {
   showPanel("intro");
-  $("chalIntro").hidden = false; $("chalTitle").textContent = "A challenge for you"; $("chalLead").textContent = ""; $("chalFrom").textContent = "Opening the challenge…"; $("chalHym").hidden = true;
+  $("chalIntro").hidden = false; $("chalTitle").textContent = "A challenge for you"; $("chalLead").textContent = ""; $("chalHym").hidden = true;
   renderModes(); renderHud();
   try {
     chalInfo = await api(`/sets/${id}`);
     try { sessionStorage.removeItem("psalmless:reloaded"); } catch {}
-    const res = Array.isArray(chalInfo.results) ? chalInfo.results : [], first = res[0];
-    const others = res.length > 1 ? ` and ${res.length - 1} other${res.length > 2 ? "s" : ""}` : "";
+    const first = (Array.isArray(chalInfo.results) ? chalInfo.results : [])[0];
     $("chalTitle").textContent = first && first.name ? `${first.name} challenges you` : `A ${chalInfo.size}-song challenge`;
-    $("chalLead").textContent = `Name ${chalInfo.size} worship songs from the first half-second. Miss, and you hear a little more.`;
-    $("chalFrom").textContent = (first && first.name ? `${first.name}${others} already played it.` : "Nobody has played it yet.") +
-      " Everyone hears the same songs in the same order, and scores show when you finish.";
+    $("chalLead").textContent = `Name ${chalInfo.size} worship songs from the first half-second. Scores show when you finish.`;
     const st = chalInfo.settings || {};
     if (Array.isArray(st.artists) && Array.isArray(st.years)) {
-      $("chalHymLine").textContent = `${st.artists.length} artist${st.artists.length === 1 ? "" : "s"}, ${(POP_STEPS[st.pop] || POP_STEPS[DEFAULT_POP]).phrase}, ${yearSpan(st.years[0], st.years[1])}`;
       $("chalArtists").innerHTML = st.artists.map(n => `<span class="chip">${esc(n)}</span>`).join("");
       $("chalHym").hidden = false;
     } else $("chalHym").hidden = true;
@@ -1436,8 +1300,8 @@ async function openChallenge(id) {
       try { sessionStorage.setItem("psalmless:reloaded", "1"); } catch {}
       location.reload(); return;
     }
-    $("chalTitle").textContent = "This challenge couldn't be opened"; $("chalLead").textContent = "";
-    $("chalFrom").textContent = (e.status ? e.message : "Try again in a minute.") + " You can start a new game instead.";
+    $("chalTitle").textContent = "This challenge couldn't be opened";
+    $("chalLead").textContent = e.status ? e.message : "Try again in a minute.";
     $("chalHym").hidden = true;
     chal = null; history.replaceState(null, "", location.pathname + location.search);
     setTimeout(() => { $("chalIntro").hidden = true; showPanel("intro"); renderModes(); renderHud(); }, 4000);
