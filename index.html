@@ -204,9 +204,23 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
 .sugg li mark { background: none; color: inherit; font-weight: 700; }
 .sugg li.on, .sugg li:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
 .sugg li.none { color: var(--muted); cursor: default; background: none; }
-.guesslog { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+/* each attempt is a row: a wrong guess in red with Wordle-style tiles, a skip left plain */
+.guesslog { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .guesslog:empty { display: none; }
-.guesslog li { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9375rem; color: var(--muted); text-decoration: line-through; }
+.guesslog li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-height: 46px; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 8px; }
+.guesslog li.miss { background: color-mix(in srgb, var(--rubric) 16%, var(--page)); border-color: color-mix(in srgb, var(--rubric) 55%, transparent); }
+.guesslog li.skip { color: var(--muted); border-style: dashed; }
+.guesslog .gt { min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.tiles { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.tile { max-width: 100%; padding: 2px 8px; border: 1px solid var(--rule); border-radius: 5px; background: var(--sheet); font-size: .875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: lining-nums tabular-nums; }
+.tile.hit { background: var(--good); border-color: var(--good); color: var(--good-ink); }
+.tile.near { background: var(--gold); border-color: var(--gold); color: #1A1406; }
+.tile.off { color: var(--muted); }
+/* clues stay hidden until the player asks for them */
+.guesslog:not(.hints) .tiles { display: none; }
+.hintbar { display: flex; justify-content: flex-end; margin-bottom: -6px; }
+.hintbar .btn { min-height: 34px; padding: 4px 12px; font-size: .9375rem; }
+.hintbar .btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--page); }
 
 /* the reveal is the page's one entrance */
 .reveal { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px 16px; align-items: start; padding-top: 20px; border-top: 1px solid var(--rule); animation: rise .45s cubic-bezier(.2, .9, .3, 1); }
@@ -388,6 +402,7 @@ details.more > div { display: grid; gap: 12px; margin-top: 12px; }
               </div>
             </div>
           </div>
+          <div class="hintbar" id="hintBar" hidden><button class="btn ghost" id="hintBtn" type="button" aria-pressed="false">Show hints</button></div>
           <ul class="guesslog" id="log"></ul>
           <div class="reveal" id="reveal" hidden>
             <img id="rvArt" alt="">
@@ -564,6 +579,7 @@ let years = store.get("years", DEFAULT_YEARS);
 let popIdx = store.get("pop2", DEFAULT_POP);
 let myName = store.get("name", "");
 let sfxOn = store.get("sfx", true);
+let hintsOn = store.get("hints", false);
 let mode = store.get("mode", "survival");    // survival | set
 let setSize = store.get("setSize", 5);
 // a challenge link is /#c-<id>; the id is a short token the server minted for the set
@@ -995,9 +1011,27 @@ function renderRound() {
     const note = g ? (g.type === "right" ? "✓" : g.type === "skip" ? "skip" : "✕") : reveal ? "&nbsp;" : stagePts(r, i).toLocaleString();
     return `<li class="slot ${cls}"><i class="fill"></i><span class="t">${c}<small>s</small></span><span class="pts">${note}</span></li>`;
   }).join("");
-  $("log").innerHTML = r.guesses.map(g => g.type === "wrong" ? `<li>${esc(g.text)}</li>` : "").join("");
+  $("log").innerHTML = r.guesses.map(g => g.type === "wrong" ? missRow(g) : g.type === "skip" ? `<li class="skip">Skipped</li>` : "").join("");
+  $("hintBar").hidden = !r.guesses.some(g => g.clue);
+  renderHints();
   $("skipBtn").textContent = r.stage < CLIPS.length - 1 ? "Skip" : r.mode === "set" ? "Pass" : "Give up";
 }
+// A wrong guess and its clues: the artist tile is green when it shares an artist with the answer;
+// the year tile is green on the year, gold within two, and its arrow points to the answer's year.
+function missRow(g) {
+  const c = g.clue;
+  if (!c) return `<li class="miss"><span class="gt">${esc(g.text)}</span><span class="tiles"><span class="tile off">Not in this game</span></span></li>`;
+  const artist = `<span class="tile${c.artist ? " hit" : ""}" title="${c.artist ? "Right artist" : "Different artist"}">${esc(c.a)}</span>`;
+  const year = !c.y || !c.year ? "" : `<span class="tile${c.year === "same" ? " hit" : c.near ? " near" : ""}" title="${c.year === "same" ? "Right year" : `The answer is ${c.year}`}">` +
+    `${c.y}${c.year === "newer" ? " ↑" : c.year === "older" ? " ↓" : ""}</span>`;
+  return `<li class="miss"><span class="gt">${esc(c.t)}</span><span class="tiles">${artist}${year}</span></li>`;
+}
+function renderHints() {
+  $("log").classList.toggle("hints", hintsOn);
+  $("hintBtn").setAttribute("aria-pressed", hintsOn);
+  $("hintBtn").textContent = hintsOn ? "Hide hints" : "Show hints";
+}
+$("hintBtn").onclick = () => { hintsOn = !hintsOn; store.set("hints", hintsOn); renderHints(); };
 function paintProgress(t) {
   [...$("slots").children].forEach((li, i) => {
     const a = i ? CLIPS[i - 1] : 0, b = CLIPS[i];

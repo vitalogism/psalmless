@@ -232,6 +232,27 @@ function reveal(t) {
   return { title: t.t, artist: t.a, album: t.al, year: t.y, art: t.art, link: t.l, rank: t.r };
 }
 
+// credited artists, so "Elevation Worship & Brandon Lake" shares an artist with "Brandon Lake"
+const credits = a => new Set(String(a || "").toLowerCase().split(/\s*(?:,|&|\bfeat\.?|\bft\.?|\bwith\b)\s*/).map(s => s.trim()).filter(Boolean));
+
+// Wordle-style clues for a wrong guess: does the guessed song share an artist with the answer,
+// and is the answer from the same year, a newer one or an older one? Only the comparison is
+// sent, never the answer's own artist or year. Null when the guess isn't a song in this game.
+async function clue(env, run, k, answer) {
+  const pool = JSON.parse(run.pool);
+  const from = new Map(pool.map(([n, id]) => [id, n]));
+  let guess = null;
+  for (const e of (await getArtists(env, [...new Set(pool.map(p => p[0]))])).values()) {
+    guess = e.tracks.find(t => t.k === k && from.has(t.id));
+    if (guess) break;
+  }
+  if (!guess) return null;
+  const ac = credits(answer.a);
+  const artist = from.get(guess.id) === from.get(answer.id) || [...credits(guess.a)].some(c => ac.has(c));
+  const d = guess.y && answer.y ? answer.y - guess.y : null;
+  return { t: guess.b, a: guess.a, y: guess.y || null, artist, year: d === null ? null : d === 0 ? "same" : d > 0 ? "newer" : "older", near: d !== null && Math.abs(d) <= 2 };
+}
+
 async function act(env, id, kind, text) {
   const run = await loadRun(env, id);
   if (!run) return fail("Run not found.", 404);
@@ -243,8 +264,11 @@ async function act(env, id, kind, text) {
   if (kind === "guess") {
     text = String(text || "").trim().slice(0, 120);
     if (!text) return fail("Empty guess.");
-    result = norm(text) === track.k ? "right" : "wrong";
-    guesses.push({ type: result, text });
+    const k = norm(text);
+    result = k === track.k ? "right" : "wrong";
+    const g = { type: result, text };
+    if (result === "wrong") { const c = await clue(env, run, k, track); if (c) g.clue = c; }
+    guesses.push(g);
   } else {
     result = "skip";
     guesses.push({ type: "skip" });
