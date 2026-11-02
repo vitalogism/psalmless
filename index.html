@@ -18,503 +18,317 @@
 <meta name="twitter:title" content="Psalmless">
 <meta name="twitter:description" content="Name the worship song from the first half-second. Three lamps, a global leaderboard, and challenges to send to friends.">
 <meta name="twitter:image" content="https://vitalogism.github.io/psalmless/og.png">
-<meta name="theme-color" content="#E8EAE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#E9EBE4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#13151B" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ctext x=%2216%22 y=%2226%22 font-size=%2228%22 text-anchor=%22middle%22 font-family=%22Georgia%22 fill=%22%23B3261E%22%3EP%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&family=IM+Fell+English:ital@1&family=IM+Fell+English+SC&display=swap">
 <style>
+/* A printed hymnal: paper, ink, and red only where the page tells you what to do (the rubric). */
 :root {
-  --page: #E8EAE3;
-  --leaf: #F7F8F4;
-  --well: #DDE0D8;
+  --page: #E9EBE4;
+  --sheet: #F8F9F5;
   --ink: #1C2130;
   --muted: #5F6674;
-  --rule: #C7CCC2;
+  --rule: #CBD0C6;
   --rubric: #B3261E;
   --rubric-ink: #FFFFFF;
   --gold: #A67A1E;
-  --gold-ink: #1A1406;
   --good: #2E7D4F;
-  --skip: #8F95A1;
-  --flame: #D2691E;
-  --glow: rgb(166 122 30 / .35);
-  --shadow: rgb(28 33 48 / .16);
   --display: "IM Fell English SC", "Iowan Old Style", Georgia, serif;
+  --scripture: "IM Fell English", "Iowan Old Style", Georgia, serif;
   --body: "Alegreya Sans", "Avenir Next", "Segoe UI", sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --nav-h: 58px;
+  --nav-h: 56px;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --page: #13151B; --leaf: #1C1F27; --well: #0F1117; --ink: #E9E7E0; --muted: #9DA2AE;
-    --rule: #30343F; --rubric: #E0574B; --rubric-ink: #16090A; --gold: #D6A845; --gold-ink: #1A1406;
-    --good: #5CC08A; --skip: #5B606C; --flame: #EA8A3C; --glow: rgb(214 168 69 / .28); --shadow: rgb(0 0 0 / .45);
+  :root {
+    --page: #13151B; --sheet: #1C1F27; --ink: #E9E7E0; --muted: #9DA2AE; --rule: #30343F;
+    --rubric: #E0574B; --rubric-ink: #16090A; --gold: #D6A845; --good: #5CC08A;
     color-scheme: dark;
   }
-}
-:root[data-theme="dark"] {
-  --page: #13151B; --leaf: #1C1F27; --well: #0F1117; --ink: #E9E7E0; --muted: #9DA2AE;
-  --rule: #30343F; --rubric: #E0574B; --rubric-ink: #16090A; --gold: #D6A845; --gold-ink: #1A1406;
-  --good: #5CC08A; --skip: #5B606C; --flame: #EA8A3C; --glow: rgb(214 168 69 / .28); --shadow: rgb(0 0 0 / .45);
-  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { margin: 0; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  background: var(--page); color: var(--ink);
-  font: 17px/1.5 var(--body);
-  padding: env(safe-area-inset-top, 0px) 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 400 1.0625rem/1.5 var(--body);
+  padding: env(safe-area-inset-top, 0px) 20px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 28px);
   overflow-x: hidden;
 }
-/* the glow lives on its own fixed layer: a fixed background attachment repaints on every scroll frame on phones */
-body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(ellipse 70% 45% at 50% -8%, var(--glow), transparent 70%); }
+@media (min-width: 900px) { body { padding: 0 40px 64px; } }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; touch-action: manipulation; }
+p { margin: 0; }
 :focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
-b, strong { font-weight: 700; }
+.num { font-variant-numeric: lining-nums tabular-nums; }
 
-.wrap { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-.cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
-.side { display: grid; gap: 12px; min-width: 0; }
-@media (min-width: 900px) {
-  body { padding-bottom: 48px; }
-  .wrap { gap: 20px; }
-  .cols { grid-template-columns: minmax(0, 7fr) minmax(320px, 5fr); gap: 20px; }
-}
-
-/* One view at a time on phones; on wide screens the game stays and the sidebar switches */
+/* ---------- layout: one view at a time on phones, an open book on wide screens ---------- */
+.wrap { max-width: 1120px; margin: 0 auto; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; align-items: start; }
 .side .panel { display: none; }
 .wrap[data-view="hymnal"] .panel[data-panel="hymnal"],
-.wrap[data-view="board"] .panel[data-panel="board"],
-.wrap[data-view="record"] .panel[data-panel="record"] { display: grid; }
+.wrap[data-view="board"] .panel[data-panel="board"] { display: grid; }
 @media (max-width: 899px) {
   .wrap[data-view="play"] .side { display: none; }
   .wrap:not([data-view="play"]) #game { display: none; }
-  .side .side-tabs { display: none; }
 }
 @media (min-width: 900px) {
+  .cols { grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr); gap: 0; align-items: stretch; }
+  #game { padding: 4px 48px 8px 0; border-right: 1px solid var(--rule); min-height: 520px; }
+  .side { padding: 4px 0 8px 40px; }
   .wrap[data-view="play"] .panel[data-panel="hymnal"] { display: grid; }
 }
 
 /* ---------- header ---------- */
-.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 12px; padding: 12px 0 10px; border-bottom: 1px solid var(--rule); }
-.top .hud { grid-column: 1 / -1; min-width: 0; }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px 16px; padding: 18px 0 16px; margin-bottom: 24px; border-bottom: 1px solid var(--rule); }
+.top .hud { grid-column: 1 / -1; grid-row: 2; }
 @media (min-width: 900px) {
-  .top { grid-template-columns: minmax(0, 1fr) auto auto; padding-top: 16px; }
-  .top .hud { grid-column: auto; }
+  .top { grid-template-columns: minmax(0, 1fr) auto auto; gap: 24px; padding-top: 32px; margin-bottom: 32px; }
+  .top .hud { grid-column: auto; grid-row: auto; }
 }
-h1 { font: 400 clamp(1.9rem, 6vw, 2.9rem)/1 var(--display); margin: 0; letter-spacing: .01em; white-space: nowrap; }
-h1 a { color: inherit; text-decoration: none; display: inline-block; border-radius: 4px; transition: opacity .15s; }
-h1 a:hover { opacity: .8; }
-h1 a:active { transform: scale(.98); }
-h1 .p { color: var(--rubric); display: inline-block; text-shadow: 0 0 14px var(--glow); }
-.tag { font: 500 .72rem var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
+h1 { margin: 0; font: 400 clamp(2.25rem, 8vw, 3rem)/1 var(--display); white-space: nowrap; }
+h1 a { color: inherit; text-decoration: none; border-radius: 4px; }
+h1 .p { color: var(--rubric); }
+.tag { margin-top: 4px; color: var(--muted); font-size: .9375rem; }
 @media (max-width: 520px) { .tag { display: none; } }
-.iconbtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule); background: var(--leaf); display: grid; place-items: center; color: var(--muted); transition: color .2s, border-color .2s, transform .12s; }
+.iconbtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule); background: transparent; display: grid; place-items: center; color: var(--muted); align-self: center; }
 .iconbtn:hover { color: var(--ink); border-color: var(--ink); }
-.iconbtn:active { transform: scale(.92); }
 .iconbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.iconbtn[aria-pressed="true"] { color: var(--rubric); }
-.iconbtn[aria-pressed="true"] .off { display: none; }
+.iconbtn[aria-pressed="true"] .off, .iconbtn[aria-pressed="false"] .on { display: none; }
 
-.hud { display: flex; gap: 6px; align-items: stretch; }
-.cell { flex: 1; min-width: 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--leaf); padding: 5px 8px 6px; display: grid; gap: 2px; align-content: start; text-align: center; position: relative; }
-@media (min-width: 900px) { .cell { flex: none; width: 108px; padding: 5px 10px 6px; } }
-/* the rank tile appears once the Record tab has been opened; it slides in rather than snapping */
-.gm.just-on { animation: rise .45s cubic-bezier(.2, 1.2, .4, 1); }
-.cell .k { font: 500 .58rem/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cell .k b { color: var(--flame); font-weight: 500; letter-spacing: 0; }
-@media (max-width: 420px) { .cell .k b { display: none; } }
-.cell .v { font: 500 1.2rem/1.25 var(--mono); font-variant-numeric: tabular-nums; }
-.cell.score .v { color: var(--gold); }
-/* sits on the tile's bottom edge so the rank tile is the same height as the others */
-.tier { position: absolute; left: 10px; right: 10px; bottom: 3px; height: 3px; border-radius: 2px; background: var(--well); overflow: hidden; }
-.tier i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--rubric)); transition: width .6s cubic-bezier(.3, 1.2, .5, 1); }
-.tl { font: .56rem/1.3 var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.combo { display: flex; gap: 2px; height: 4px; }
-.combo i { flex: 1; background: var(--well); border-radius: 1px; transition: background .25s, box-shadow .25s; }
-.combo i.on { background: var(--flame); box-shadow: 0 0 6px color-mix(in srgb, var(--flame) 60%, transparent); }
-.combo i.max { background: var(--rubric); }
-.lamps { display: flex; gap: 4px; justify-content: center; align-items: center; height: 1.5rem; }
-.lamp { width: 14px; height: 20px; position: relative; transition: opacity .4s, filter .4s; }
-.lamp svg { width: 100%; height: 100%; }
-.lamp.out { opacity: .22; filter: grayscale(1); }
-.lamp:not(.out) .flame { animation: flicker 1.6s ease-in-out infinite; transform-origin: 50% 100%; }
-.lamp:nth-child(2) .flame { animation-delay: -.5s; }
-.lamp:nth-child(3) .flame { animation-delay: -1.1s; }
-@keyframes flicker { 0%, 100% { transform: scale(1, 1); } 30% { transform: scale(.92, 1.08) rotate(-3deg); } 60% { transform: scale(1.05, .95) rotate(2deg); } }
-.lamp.dying { animation: die .8s ease-out; }
-@keyframes die { 0% { transform: scale(1.4); } 40% { transform: scale(1.1) rotate(-8deg); } 100% { transform: none; } }
-.lamp.relit { animation: relit .9s cubic-bezier(.3, 1.6, .5, 1); }
-@keyframes relit { 0% { transform: scale(.4); filter: brightness(2); } 60% { transform: scale(1.35); } 100% { transform: none; } }
-.bump { animation: bump .5s cubic-bezier(.3, 1.6, .5, 1); }
-@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.3); color: var(--gold); } 100% { transform: scale(1); } }
+.hud { display: flex; gap: 32px; margin: 0; }
+.cell { display: grid; min-width: 0; }
+.cell dt { font-size: .8125rem; color: var(--muted); }
+.cell dd { margin: 0; font: 500 1.3125rem/1.25 var(--body); font-variant-numeric: lining-nums tabular-nums; }
+.cell dd.sub { font: 400 .8125rem/1.3 var(--body); color: var(--muted); white-space: nowrap; min-height: 1.3em; }
+.lamps { display: flex; gap: 5px; align-items: center; height: 1.64rem; }
+.lamp { width: 14px; height: 20px; }
+.lamp svg { display: block; width: 100%; height: 100%; }
+.lamp.out { opacity: .25; filter: grayscale(1); }
+.lamp.dying { animation: die .7s ease-out; }
+@keyframes die { from { transform: scale(1.35); } }
+.lamp.relit { animation: relit .7s ease-out; }
+@keyframes relit { 0% { transform: scale(.5); } 60% { transform: scale(1.25); } }
 
-/* ---------- bottom nav (phones) ---------- */
-.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px;
-  background: color-mix(in srgb, var(--leaf) 90%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  border-top: 1px solid var(--rule); padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px)); }
-.nav button { background: none; border: 0; border-radius: 10px; display: grid; justify-items: center; gap: 1px; padding: 4px 0 3px; color: var(--muted);
-  font: 500 .58rem var(--mono); letter-spacing: .08em; text-transform: uppercase; position: relative; transition: color .2s, background .2s; }
-.nav button .g { font: 1.35rem/1.1 var(--display); }
-.nav button[aria-pressed="true"] { color: var(--rubric); background: color-mix(in srgb, var(--rubric) 9%, transparent); }
-.nav .dot { position: absolute; top: 5px; right: calc(50% - 18px); width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 2px var(--leaf); animation: dotpulse 1.4s ease-in-out infinite; }
-@keyframes dotpulse { 50% { transform: scale(1.35); } }
-@media (min-width: 900px) { .nav { display: none; } }
+/* ---------- headings and scripture ---------- */
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 22px; font: 400 1.5rem/1.15 var(--display); }
+.head .v { color: var(--rubric); margin-right: .2em; }
+.head small { font: 400 .9375rem/1.3 var(--body); color: var(--muted); text-align: right; }
+.verse { margin: 0; font: italic 400 1.1875rem/1.4 var(--scripture); max-width: 38ch; }
+.verse cite { display: block; margin-top: 4px; font: normal 400 .8125rem/1.3 var(--body); color: var(--muted); }
+.verse.big { font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.22; text-wrap: balance; }
 
-/* ---------- surfaces ---------- */
-.leaf { background: var(--leaf); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; display: grid; gap: 14px; position: relative; min-width: 0; }
-@media (min-width: 900px) { .leaf { padding: 22px; gap: 16px; } }
-h2 { font: 400 1.3rem/1.1 var(--display); margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; min-width: 0; }
-h2 > span:first-child { white-space: nowrap; }
-h2 .v { color: var(--rubric); margin-right: .3em; }
-h2 small { font: 500 .68rem var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.side-tabs { display: flex; gap: 4px; border: 1px solid var(--rule); border-radius: 10px; padding: 3px; background: var(--leaf); }
-.side-tabs button { flex: 1; font: 500 .68rem var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 0; background: transparent; border-radius: 7px; padding: 7px 4px; color: var(--muted); display: flex; justify-content: center; align-items: center; gap: 6px; transition: background .2s, color .2s; position: relative; }
-.side-tabs .dot { position: absolute; top: 4px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: dotpulse 1.4s ease-in-out infinite; }
-.side-tabs button .g { font: 1rem/1 var(--display); color: var(--rubric); }
-.side-tabs button[aria-pressed="true"] { background: var(--ink); color: var(--leaf); }
-.side-tabs button[aria-pressed="true"] .g { color: var(--gold); }
-
-/* ---------- game ---------- */
-#game { overflow: hidden; }
-#game.shake { animation: shake .45s; }
-@keyframes shake { 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
-#game.glory { animation: glory 1.2s ease-out; }
-@keyframes glory { 0% { box-shadow: 0 0 0 0 var(--glow); } 30% { box-shadow: 0 0 0 6px var(--glow), 0 0 60px 10px var(--glow); } 100% { box-shadow: 0 0 0 0 transparent; } }
-.rays { position: absolute; inset: -50%; pointer-events: none; opacity: 0; background: repeating-conic-gradient(from 0deg at 50% 50%, var(--glow) 0 6deg, transparent 6deg 18deg); mask: radial-gradient(circle, #000 0, transparent 55%); }
-#game.glory .rays { animation: rays 1.6s ease-out; }
-@keyframes rays { 0% { opacity: 0; transform: rotate(0) scale(.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: rotate(40deg) scale(1.1); } }
-.stack { display: grid; gap: 14px; }
-
-/* stage strip */
-.slots { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
-.slot { border: 1px solid var(--rule); border-radius: 6px; padding: 5px 2px 4px; display: grid; justify-items: center; gap: 0; transition: border-color .3s, background .3s, transform .3s, opacity .3s; position: relative; min-width: 0; }
-.slot .t { font: 500 .74rem var(--mono); color: var(--muted); }
-.slot .pts { font: .6rem var(--mono); color: var(--muted); opacity: .8; white-space: nowrap; overflow: hidden; max-width: 100%; text-overflow: ellipsis; }
-.slot.wrong { border-color: var(--rubric); animation: pop .35s; }
-.slot.wrong .t { color: var(--rubric); }
-.slot.skipped { background: color-mix(in srgb, var(--skip) 18%, transparent); animation: pop .35s; }
-.slot.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 16%, transparent); animation: pop .35s; }
-.slot.right .t, .slot.right .pts { color: var(--good); }
-.slot.now { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 14px var(--glow); }
-.slot.now .pts { color: var(--gold); opacity: 1; font-weight: 500; }
-.slot.now .t { color: var(--ink); }
-.slot.later { opacity: .55; }
-@keyframes pop { 0% { transform: scale(.85); } 60% { transform: scale(1.06); } 100% { transform: none; } }
-
-/* the stakes line: what this guess is worth right now */
-.stakes { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 10px; font: .8rem var(--mono); color: var(--muted); flex-wrap: wrap; }
-.stakes > span:first-child { white-space: nowrap; }
-.stakes .worth { font: 400 1.5rem/1 var(--display); color: var(--gold); font-variant-numeric: tabular-nums; }
-.stakes .worth.decay { animation: decay .5s; }
-@keyframes decay { 0% { color: var(--rubric); transform: translateY(-3px); } 100% { color: var(--gold); } }
-.stakes .fire { color: var(--flame); font-weight: 500; }
-
-/* player */
-.player { display: flex; align-items: center; gap: 14px; }
-.play { width: 72px; height: 72px; border-radius: 50%; border: 0; background: var(--rubric); color: var(--rubric-ink); display: grid; place-items: center; flex: none; position: relative; transition: transform .15s; box-shadow: 0 8px 22px color-mix(in srgb, var(--rubric) 35%, transparent); }
-.play:hover:not(:disabled) { transform: scale(1.06); }
-.play:active:not(:disabled) { transform: scale(.95); }
-.play:disabled { opacity: .4; cursor: default; box-shadow: none; }
-.play svg { width: 28px; height: 28px; fill: currentColor; }
-.play .replay { display: none; }
-.play.done .replay { display: block; }
-.play.done .tri { display: none; }
-.play.playing::before, .play.playing::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--rubric); animation: ring 1.4s ease-out infinite; }
-.play.playing::after { animation-delay: .7s; }
-@keyframes ring { from { transform: scale(1); opacity: .7; } to { transform: scale(1.6); opacity: 0; } }
-.bar { flex: 1; display: grid; gap: 6px; min-width: 0; }
-.track { position: relative; height: 14px; background: var(--well); border-radius: 4px; overflow: hidden; }
-.track .unlocked { position: absolute; inset: 0 auto 0 0; background: color-mix(in srgb, var(--rubric) 22%, transparent); transition: width .5s cubic-bezier(.3, 1.3, .5, 1); }
-.track .prog { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--rubric), var(--gold)); width: 0; }
-.track .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--leaf); }
-.scale { display: flex; justify-content: space-between; align-items: center; font: .7rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; gap: 8px; }
-.eq { display: flex; gap: 3px; align-items: flex-end; height: 18px; }
-.eq i { width: 3px; background: var(--rubric); border-radius: 1px; height: 3px; transition: height .08s; }
-.listens { font: .68rem var(--mono); color: var(--muted); }
-.listens b { color: var(--ink); font-weight: 500; }
-
-/* guess row */
-.guessrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-.guessrow .inwrap { position: relative; min-width: 0; display: grid; }
-.guessrow input { min-width: 0; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 8px; background: var(--page); font-size: 16px; }
-.guessrow input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--glow); outline: none; }
-.guessrow .acts2 { display: flex; gap: 8px; }
-.btn { padding: 11px 18px; border-radius: 8px; border: 1px solid var(--ink); background: var(--ink); color: var(--leaf); font-weight: 700; transition: transform .12s, opacity .2s, box-shadow .2s; white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-.btn:active:not(:disabled) { transform: scale(.96); }
-.btn.gold { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); box-shadow: 0 6px 18px color-mix(in srgb, var(--gold) 35%, transparent); }
-.btn.gold:hover:not(:disabled) { box-shadow: 0 8px 24px color-mix(in srgb, var(--gold) 50%, transparent); }
-.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); font-weight: 500; box-shadow: none; }
-.btn.ghost:hover:not(:disabled) { border-color: var(--ink); }
-.btn:disabled { opacity: .4; cursor: default; box-shadow: none; }
-.btn.big { padding: 14px 32px; font-size: 1.05rem; }
-.btn .kbd { font: .62rem var(--mono); opacity: .6; border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; }
-@media (max-width: 520px) { .btn .kbd { display: none; } .guessrow { grid-template-columns: 1fr; } .guessrow .acts2 .btn { flex: 1; } }
-.sugg { position: absolute; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--leaf); border: 1px solid var(--rule); border-radius: 8px; max-height: 240px; overflow-y: auto; z-index: 5; box-shadow: 0 12px 28px var(--shadow); }
-.sugg li { padding: 9px 10px; border-radius: 5px; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-.sugg li .tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sugg li small { color: var(--muted); text-align: right; font-size: .78rem; flex: none; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sugg li mark { background: none; color: var(--rubric); font-weight: 700; }
-.sugg li.on, .sugg li:hover { background: color-mix(in srgb, var(--rubric) 12%, transparent); }
-.sugg li.none { color: var(--muted); cursor: default; background: none; }
-.guesslog { display: grid; gap: 2px; font-size: .95rem; }
-.guesslog div { display: flex; gap: 10px; border-bottom: 1px dotted var(--rule); padding: 2px 0; animation: slidein .3s ease-out; min-width: 0; }
-.guesslog div span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@keyframes slidein { from { opacity: 0; transform: translateX(-10px); } }
-.guesslog .n { font: .75rem/1.9 var(--mono); color: var(--muted); width: 2.5em; flex: none; }
-.guesslog .x { color: var(--rubric); }
-.status { color: var(--muted); font-size: .95rem; margin: 0; min-height: 1.4em; }
+/* ---------- buttons and fields ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border: 1px solid var(--ink); border-radius: 8px; background: transparent; color: var(--ink); font-weight: 500; white-space: nowrap; text-decoration: none; }
+.btn:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.btn.primary { background: var(--rubric); border-color: var(--rubric); color: var(--rubric-ink); font-weight: 700; }
+.btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--rubric) 86%, var(--ink)); }
+.btn.ghost { border-color: var(--rule); }
+.btn.big { min-height: 52px; padding: 12px 28px; font-size: 1.125rem; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.kbd { font-size: .75rem; line-height: 1.4; opacity: .65; border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; }
+@media (hover: none), (max-width: 520px) { .kbd { display: none; } }
+.field { min-width: 0; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); font-size: 16px; }
+.field:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.linkbtn { background: none; border: 0; padding: 0; font-size: .9375rem; color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+.linkbtn:hover { text-decoration-color: currentColor; }
+.seg { display: inline-flex; border: 1px solid var(--ink); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; min-height: 40px; padding: 6px 18px; font-weight: 500; }
+.seg button + button { border-left: 1px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+details.more summary { cursor: pointer; list-style: none; font-weight: 500; }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary::before { content: "+"; display: inline-block; width: 1em; color: var(--rubric); font-weight: 700; }
+details.more[open] summary::before { content: "−"; }
+details.more > div { display: grid; gap: 12px; margin-top: 12px; }
+.note { font-size: .9375rem; color: var(--muted); max-width: 48ch; }
+.status { min-height: 1.5em; margin-top: 14px; font-size: .9375rem; color: var(--muted); }
 .status.err { color: var(--rubric); }
 
-/* ---------- reveal ---------- */
-.reveal { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: start; border-top: 1px solid var(--rule); padding-top: 14px; animation: rise .5s cubic-bezier(.2, 1.2, .4, 1); min-width: 0; }
-@media (min-width: 600px) { .reveal { grid-template-columns: 128px 1fr; gap: 18px; align-items: center; } }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
-.reveal img { width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: var(--rule); box-shadow: 0 10px 24px var(--shadow); animation: spinin .6s cubic-bezier(.2, 1.2, .4, 1); }
-@keyframes spinin { from { transform: rotateY(90deg) scale(.8); } }
-.reveal > div { min-width: 0; }
-.reveal .verdict { font: 500 .74rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-.reveal .verdict.win { color: var(--good); }
-.reveal .verdict.lose { color: var(--rubric); }
-.verse { font: italic .95rem/1.35 var(--body); color: var(--muted); margin: 4px 0 2px; border-left: 2px solid var(--gold); padding-left: 10px; }
-.reveal h3 { font: 400 1.35rem/1.15 var(--display); margin: 2px 0; text-wrap: balance; }
-@media (min-width: 600px) { .reveal h3 { font-size: 1.6rem; } }
-.reveal p { margin: 0; color: var(--muted); font-size: .9rem; }
-.reveal .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.reveal .acts .btn { padding: 9px 14px; }
-.reveal a { color: var(--rubric); }
-.gain { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.pill { font: 500 .68rem var(--mono); letter-spacing: .04em; border: 1px solid var(--rule); border-radius: 999px; padding: 2px 9px; color: var(--muted); animation: pop .4s backwards; }
-.pill.gold { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 50%, transparent); background: color-mix(in srgb, var(--gold) 10%, transparent); }
-.pill.fire { color: var(--flame); border-color: color-mix(in srgb, var(--flame) 50%, transparent); }
-.pill.good { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, transparent); }
+/* ---------- intro ---------- */
+.intro { display: grid; gap: 22px; justify-items: start; max-width: 36rem; }
+.lede { max-width: 46ch; }
+.choose { display: grid; gap: 12px; justify-items: start; }
+.sizes { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sizes .lb { color: var(--muted); font-size: .9375rem; margin-right: 4px; }
+.sizes button { min-width: 44px; min-height: 36px; border: 1px solid var(--rule); border-radius: 6px; background: transparent; font-variant-numeric: lining-nums tabular-nums; }
+.sizes button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--page); }
+.go { display: grid; gap: 8px; justify-items: start; }
 
-.float { position: absolute; font: 400 2rem var(--display); color: var(--gold); pointer-events: none; z-index: 10; animation: floatup 1.4s ease-out forwards; text-shadow: 0 2px 12px var(--glow); white-space: nowrap; }
-@keyframes floatup { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -10px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -70px) scale(1); } }
-.spark { position: fixed; width: 8px; height: 8px; pointer-events: none; z-index: 40; border-radius: 1px; }
+/* a challenge link opens straight to the challenge; the survival intro steps aside */
+.chal { display: grid; gap: 14px; justify-items: start; }
+.chal-title { margin: 0; font: 400 clamp(1.75rem, 6vw, 2.25rem)/1.1 var(--display); text-wrap: balance; }
+.wrap[data-chal="1"] #introLine, .wrap[data-chal="1"] #lede, .wrap[data-chal="1"] #choose, .wrap[data-chal="1"] #startGo { display: none; }
+.chal details { width: 100%; }
+.chips.ro .chip { cursor: default; font-size: .875rem; min-height: 28px; color: var(--ink); }
 
-/* ---------- intro / game over ---------- */
-.intro { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; text-align: center; justify-items: center; padding: 4px 0; }
-.intro > * { min-width: 0; max-width: 100%; }
-.intro .big { font: 400 clamp(1.25rem, 3.6vw, 1.8rem)/1.2 var(--display); margin: 0; text-wrap: balance; max-width: 34ch; }
-cite { display: block; font: normal .7rem var(--mono); letter-spacing: .06em; color: var(--muted); margin-top: 4px; }
-.rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; text-align: left; }
-.rules div { border: 1px solid var(--rule); border-radius: 8px; padding: 9px 11px; font-size: .86rem; line-height: 1.35; }
-.rules b { display: block; font: 400 1.05rem var(--display); color: var(--rubric); }
-.shortrules { display: none; margin: 0; font-size: .88rem; color: var(--muted); max-width: 36ch; }
-.shortrules b { color: var(--ink); font-weight: 500; }
-@media (max-width: 520px) { .intro .rules { display: none; } .intro .shortrules { display: block; } }
-.mode { font: .8rem var(--mono); color: var(--muted); }
-.mode b { color: var(--gold); font-weight: 500; }
-.mode.practice b { color: var(--rubric); }
-.offices { width: 100%; max-width: 460px; text-align: left; display: grid; gap: 6px; }
-.offices .label { justify-content: space-between; }
-.quest { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 8px; font-size: .88rem; transition: background .3s, border-color .3s; }
-.quest .q { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--rule); display: grid; place-items: center; font: .8rem var(--mono); color: var(--muted); position: relative; overflow: hidden; }
-.quest .q i { position: absolute; inset: 0; background: color-mix(in srgb, var(--gold) 30%, transparent); transform-origin: bottom; transition: transform .4s; }
-.quest .q b { position: relative; font-weight: 500; font-size: .66rem; }
-.quest .qt { min-width: 0; }
-.quest .qt small { display: block; color: var(--muted); font-size: .76rem; }
-.quest .qr { font: 500 .68rem var(--mono); color: var(--gold); white-space: nowrap; }
-.quest.done { background: color-mix(in srgb, var(--good) 10%, transparent); border-color: color-mix(in srgb, var(--good) 50%, transparent); }
-.quest.done .q { background: var(--good); color: #fff; border-color: var(--good); }
-.quest.done .q i { display: none; }
-.quest.done .qr { color: var(--good); }
-.quest.just { animation: questdone .8s cubic-bezier(.3, 1.4, .5, 1); }
-@keyframes questdone { 30% { transform: scale(1.04); box-shadow: 0 0 0 4px color-mix(in srgb, var(--good) 30%, transparent); } }
+/* ---------- the round: six clips, one strip ---------- */
+.round { display: grid; gap: 20px; }
+.slots { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.slot { position: relative; overflow: hidden; display: grid; justify-items: center; gap: 2px; padding: 10px 2px 8px; border: 1px solid var(--rule); border-radius: 6px; background: var(--sheet); }
+.slot .fill { position: absolute; inset: 0; background: color-mix(in srgb, var(--rubric) 18%, transparent); transform: scaleX(0); transform-origin: left; pointer-events: none; }
+.slot .t { position: relative; font: 400 1.5rem/1 var(--display); }
+.slot .t small { font: 400 .8125rem var(--body); color: var(--muted); margin-left: 1px; }
+.slot .pts { position: relative; font-size: .8125rem; line-height: 1.3; color: var(--muted); font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.slot.now { border-color: var(--rubric); box-shadow: inset 0 0 0 1px var(--rubric); }
+.slot.now .pts { color: var(--rubric); font-weight: 700; }
+.slot.later { background: transparent; border-style: dashed; }
+.slot.later .t { color: var(--muted); }
+.slot.right { background: var(--good); border-color: var(--good); color: #fff; }
+.slot.right .t small, .slot.right .pts { color: inherit; }
+.slot.wrong, .slot.skip { background: transparent; }
+.slot.wrong .t, .slot.skip .t { color: var(--muted); }
+@media (max-width: 380px) { .slots { gap: 4px; } .slot .t { font-size: 1.25rem; } }
 
-.over .final { font: 500 3.2rem/1 var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
-.over .title { font: 400 1.45rem var(--display); margin: 0; }
-.over .verse { max-width: 440px; }
-.sumrow { display: flex; gap: 14px 18px; justify-content: center; font: .8rem var(--mono); color: var(--muted); flex-wrap: wrap; }
-.sumrow b { color: var(--ink); font-weight: 500; }
-.strip { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; max-width: 460px; }
-.strip i { width: 18px; height: 18px; border-radius: 4px; background: var(--well); display: grid; place-items: center; font: .55rem var(--mono); color: var(--muted); animation: pop .3s backwards; }
-.strip i.w { background: var(--good); color: #fff; }
-.strip i.w.h { background: var(--gold); color: var(--gold-ink); box-shadow: 0 0 8px var(--glow); }
-.strip i.l { background: color-mix(in srgb, var(--rubric) 60%, var(--well)); color: #fff; }
-.rewards { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.nameform { display: flex; gap: 8px; width: 100%; max-width: 380px; }
-.nameform input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--page); font-size: 16px; }
-.over .acts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.player { display: flex; align-items: center; gap: 16px; }
+.play { flex: none; width: 60px; height: 60px; border-radius: 50%; border: 0; background: var(--ink); color: var(--page); display: grid; place-items: center; }
+.play svg { width: 24px; height: 24px; fill: currentColor; }
+.play .replay, .play.done .tri { display: none; }
+.play.done .replay { display: block; }
+.play.playing { background: var(--rubric); color: var(--rubric-ink); }
+.play:disabled { opacity: .4; cursor: default; }
+.play:active:not(:disabled) { transform: scale(.96); }
+.stakes { display: grid; gap: 2px; min-width: 0; }
+.worth { font: 400 2rem/1.05 var(--display); }
+.worth small { font: 400 .9375rem var(--body); color: var(--muted); margin-left: 6px; }
+.fire { font-size: .9375rem; color: var(--muted); }
+.fire.warn { color: var(--rubric); }
 
-/* ---------- leaderboard ---------- */
-.tabs { display: flex; gap: 4px; }
-.tabs button { font: 500 .66rem var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--rule); background: transparent; border-radius: 5px; padding: 4px 9px; color: var(--muted); }
-.tabs button[aria-pressed="true"] { background: var(--ink); color: var(--leaf); border-color: var(--ink); }
-.chase { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; border: 1px dashed color-mix(in srgb, var(--gold) 60%, transparent); border-radius: 8px; padding: 8px 12px; font-size: .88rem; background: color-mix(in srgb, var(--gold) 6%, transparent); }
-.chase .g { font: 1.3rem/1 var(--display); color: var(--gold); }
-.chase b { font-weight: 500; }
-.chase small { display: block; color: var(--muted); font: .72rem var(--mono); }
-.board { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: r; max-height: 340px; overflow-y: auto; }
-.board li { display: grid; grid-template-columns: 2em 1fr auto; gap: 10px; align-items: baseline; padding: 6px 8px; border-radius: 6px; counter-increment: r; animation: slidein .3s ease-out backwards; min-width: 0; }
-.board li::before { content: counter(r); font: .78rem var(--mono); color: var(--muted); text-align: right; }
-.board li:nth-child(1)::before { content: "♔"; color: var(--gold); font-size: 1rem; }
-.board li:nth-child(2)::before, .board li:nth-child(3)::before { color: var(--gold); }
-.board li.me { background: color-mix(in srgb, var(--gold) 16%, transparent); }
-.board li.next { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 50%, transparent); }
-.board .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.board .nm small { font: .68rem var(--mono); color: var(--muted); margin-left: 6px; }
-.board .sc { font: 500 .9rem var(--mono); font-variant-numeric: tabular-nums; color: var(--gold); }
-.empty { color: var(--muted); font-size: .9rem; margin: 0; }
+.guessrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.inwrap { position: relative; display: grid; min-width: 0; }
+.acts2 { display: flex; gap: 8px; }
+@media (max-width: 520px) { .guessrow { grid-template-columns: 1fr; } .acts2 .btn { flex: 1; } }
+.sugg { position: absolute; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; max-height: 264px; overflow-y: auto; z-index: 5; box-shadow: 0 14px 30px -12px rgb(20 24 34 / .35); }
+.sugg li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 10px; border-radius: 5px; cursor: pointer; }
+.sugg li .tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sugg li small { flex: none; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: .8125rem; text-align: right; }
+.sugg li mark { background: none; color: inherit; font-weight: 700; }
+.sugg li.on, .sugg li:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.sugg li.none { color: var(--muted); cursor: default; background: none; }
+.guesslog { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.guesslog:empty { display: none; }
+.guesslog li { display: flex; gap: 12px; min-width: 0; font-size: .9375rem; color: var(--muted); }
+.guesslog .n { flex: none; width: 2.6em; font-variant-numeric: lining-nums tabular-nums; }
+.guesslog s { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ---------- record: level, stats, badges ---------- */
-.level { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center; }
-.level .sigil { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--gold); display: grid; place-items: center; font: 400 1.5rem var(--display); color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, transparent); box-shadow: 0 0 18px var(--glow); }
-.level .nm { font: 400 1.25rem/1.1 var(--display); }
-.level .sub { font: .72rem var(--mono); color: var(--muted); display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }
-.level .meter { margin-top: 6px; }
-.meter { height: 6px; border-radius: 3px; background: var(--well); overflow: hidden; }
-.meter i { display: block; height: 100%; background: linear-gradient(90deg, var(--rubric), var(--gold)); transition: width .5s cubic-bezier(.3, 1.2, .5, 1); }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.stat { border: 1px solid var(--rule); border-radius: 8px; padding: 7px 8px; display: grid; gap: 1px; min-width: 0; }
-.stat .k { font: 500 .56rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat .v { font: 500 1.1rem/1.2 var(--mono); font-variant-numeric: tabular-nums; }
-.stat .v small { font-size: .7rem; color: var(--muted); }
-.badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-@media (min-width: 480px) { .badges { grid-template-columns: repeat(5, 1fr); } }
-.badge { border: 1px solid var(--rule); border-radius: 8px; padding: 8px 4px 6px; display: grid; justify-items: center; gap: 3px; text-align: center; min-width: 0; transition: transform .2s, border-color .3s; cursor: default; position: relative; }
-.badge .g { font: 400 1.5rem/1 var(--display); color: var(--gold); }
-.badge .n { font: .62rem/1.2 var(--mono); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.badge.locked { opacity: .45; filter: grayscale(1); }
-.badge.locked .g { color: var(--muted); }
-.badge:not(.locked):hover { transform: translateY(-2px); border-color: var(--gold); }
-.badge.new { animation: badgein .9s cubic-bezier(.3, 1.6, .5, 1); border-color: var(--gold); box-shadow: 0 0 16px var(--glow); }
-@keyframes badgein { 0% { transform: scale(.5) rotate(-12deg); } 60% { transform: scale(1.15) rotate(4deg); } 100% { transform: none; } }
-.badge .tip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--leaf); font: .72rem/1.3 var(--body); padding: 6px 9px; border-radius: 6px; width: max-content; max-width: 180px; white-space: normal; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 6; box-shadow: 0 6px 16px var(--shadow); }
-.badge:hover .tip, .badge:focus-visible .tip, .badge.open .tip { opacity: 1; }
+/* the reveal is the page's one entrance */
+.reveal { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px 16px; align-items: start; padding-top: 20px; border-top: 1px solid var(--rule); animation: rise .45s cubic-bezier(.2, .9, .3, 1); }
+.reveal .acts { grid-column: 1 / -1; }
+@media (min-width: 600px) { .reveal { grid-template-columns: 140px minmax(0, 1fr); gap: 14px 24px; } .reveal .acts { grid-column: 2; } }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+.reveal img { width: 100%; aspect-ratio: 1; border-radius: 6px; object-fit: cover; background: var(--rule); }
+.rv-text { display: grid; gap: 6px; min-width: 0; }
+.verdict { font-weight: 700; font-size: .9375rem; }
+.verdict.win { color: var(--good); }
+.verdict.lose { color: var(--muted); }
+.reveal h3 { margin: 0; font: 400 1.5rem/1.15 var(--display); text-wrap: balance; }
+@media (min-width: 600px) { .reveal h3 { font-size: 1.75rem; } }
+.meta, .gain span { color: var(--muted); font-size: .9375rem; }
+.gain { font-size: .9375rem; }
+.reveal .verse { font-size: 1.0625rem; margin-top: 4px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* ---------- toasts ---------- */
-.toasts { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 50; display: grid; gap: 6px; width: min(92vw, 380px); pointer-events: none; }
-@media (min-width: 900px) { .toasts { top: auto; left: auto; transform: none; right: 20px; bottom: 20px; width: 340px; } }
-.toast { background: var(--ink); color: var(--leaf); border-radius: 10px; padding: 10px 14px; display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; box-shadow: 0 12px 30px var(--shadow); animation: toastin .45s cubic-bezier(.2, 1.3, .4, 1), toastout .4s ease-in forwards; animation-delay: 0s, var(--life, 3.2s); border-left: 3px solid var(--gold); }
-.toast .g { font: 400 1.4rem/1 var(--display); color: var(--gold); }
-.toast .t { font-size: .9rem; line-height: 1.25; }
-.toast .t small { display: block; font: .68rem var(--mono); opacity: .7; letter-spacing: .04em; }
-.toast.good { border-left-color: var(--good); } .toast.good .g { color: var(--good); }
-.toast.fire { border-left-color: var(--flame); } .toast.fire .g { color: var(--flame); }
-@keyframes toastin { from { opacity: 0; transform: translateY(-14px) scale(.95); } }
-@keyframes toastout { to { opacity: 0; transform: translateY(-8px); } }
+/* ---------- results ---------- */
+.over { display: grid; gap: 18px; justify-items: start; }
+.final { margin-top: -8px; font: 400 clamp(3.25rem, 13vw, 4.5rem)/1 var(--display); }
+.strip { display: flex; flex-wrap: wrap; gap: 4px; }
+.strip i { width: 22px; height: 22px; border-radius: 4px; display: grid; place-items: center; font: normal 500 .75rem/1 var(--body); color: #fff; background: color-mix(in srgb, var(--rubric) 55%, var(--page)); }
+.strip i.w { background: var(--good); }
+.strip i.w.h { background: var(--gold); color: #1A1406; }
+.strip.mini i { width: 16px; height: 16px; font-size: .625rem; }
+.nameform { display: flex; gap: 8px; width: 100%; max-width: 440px; }
+.nameform .field { flex: 1; }
+@media (max-width: 420px) { .nameform { flex-direction: column; } }
+.share { display: grid; gap: 6px; width: 100%; max-width: 520px; }
+.share .label { display: flex; justify-content: space-between; gap: 12px; font-size: .9375rem; color: var(--muted); }
+.share .link { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 4px 4px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
+.share code { flex: 1; min-width: 0; font: .9375rem/1.3 var(--body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.share .btn { min-height: 38px; padding: 6px 12px; }
+.share .btn.copied { background: var(--good); border-color: var(--good); color: #fff; }
+.compare, .songlist, .board { list-style: none; margin: 0; padding: 0; display: grid; width: 100%; }
+.compare, .songlist { max-width: 520px; }
+.compare li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; gap: 6px 10px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.compare .rk { color: var(--muted); text-align: right; font-variant-numeric: lining-nums tabular-nums; }
+.compare .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compare li.me .nm { font-weight: 700; }
+.compare .nm small, .board .nm small { margin-left: 6px; font-size: .8125rem; font-weight: 400; color: var(--muted); }
+.compare .sc, .board .sc { font-weight: 500; font-variant-numeric: lining-nums tabular-nums; }
+.compare .strip { grid-column: 2 / -1; }
+.songlist li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: .9375rem; }
+.songlist img { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; background: var(--rule); }
+.songlist .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.songlist .t small { display: block; font-size: .8125rem; color: var(--muted); }
+.songlist .r { font-size: .8125rem; color: var(--muted); white-space: nowrap; }
+.songlist .r.w { color: var(--good); }
+#songsBox { width: 100%; max-width: 520px; }
 
-/* ---------- settings ---------- */
-.label { font: 500 .68rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.chips.scroll { max-height: 118px; overflow-y: auto; padding: 0 2px 12px 0; mask-image: linear-gradient(#000 calc(100% - 16px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 16px), transparent); }
-@media (max-width: 899px) { .chips.scroll { max-height: none; mask-image: none; -webkit-mask-image: none; padding-bottom: 0; } }
-.chip { border: 1px solid var(--rule); background: transparent; border-radius: 999px; padding: 4px 11px; font-size: .86rem; line-height: 1.4; display: inline-flex; gap: 6px; align-items: center; transition: background .2s, color .2s, transform .12s; min-height: 32px; }
-.chip:active { transform: scale(.94); }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--leaf); border-color: var(--ink); }
-.chip .ct { font: .66rem var(--mono); opacity: .65; }
-.chip.add { border-style: dashed; color: var(--muted); }
-.chip.add:hover { color: var(--ink); border-color: var(--ink); }
-.chip.add b { color: var(--rubric); font-weight: 700; }
-.hint { margin: 0; font-size: .8rem; color: var(--muted); }
-.addrow { display: flex; gap: 8px; position: relative; }
-.addrow input { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--page); font-size: 16px; }
-.addrow .btn { padding: 7px 14px; min-height: 40px; }
-.linkbtn { background: none; border: 0; padding: 0; color: var(--rubric); font: 500 .68rem var(--mono); letter-spacing: .06em; text-transform: uppercase; }
-details.more summary { cursor: pointer; font: 500 .68rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style: none; }
-details.more summary::-webkit-details-marker { display: none; }
-details.more summary::before { content: "▸ "; color: var(--rubric); }
-details.more[open] summary::before { content: "▾ "; }
-details.more > div { display: grid; gap: 8px; margin-top: 8px; }
-.knobs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 440px) { .knobs { gap: 12px; } .knob .val { font-size: 1rem; } }
-.knob { display: grid; gap: 4px; min-width: 0; }
-.knob .val { font: 400 1.2rem/1.1 var(--display); white-space: nowrap; }
-.knob .val .dash { color: var(--muted); font-size: .95rem; }
+/* ---------- side: hymnal and leaderboard ---------- */
+.side-tabs { display: none; gap: 28px; margin-bottom: 24px; border-bottom: 1px solid var(--rule); }
+.side-tabs button, .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); }
+.side-tabs button { padding: 0 0 10px; margin-bottom: -1px; font: 400 1.5rem/1.15 var(--display); }
+.side-tabs .v { color: var(--rubric); margin-right: .2em; }
+@media (min-width: 900px) { .side-tabs { display: flex; } .panel > .head { display: none; } }
+.side-tabs button[aria-pressed="true"], .tabs button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.tabs { display: flex; gap: 14px; font: 400 .9375rem var(--body); }
+.tabs button { padding: 2px 0; }
+.panel { gap: 24px; align-content: start; }
+.panel .head { margin: 0; }
+.label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: .9375rem; color: var(--muted); }
+.group { display: grid; gap: 8px; }
+.knobs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.knob { display: grid; gap: 4px; min-width: 0; align-content: start; }
+.knob .val { font: 400 1.3125rem/1.2 var(--display); white-space: nowrap; }
+.knob .val .dash { color: var(--muted); }
+.ends { display: flex; justify-content: space-between; font-size: .8125rem; color: var(--muted); }
 .range { position: relative; height: 30px; }
-.range .rail { position: absolute; left: 0; right: 0; top: 13px; height: 4px; background: var(--rule); border-radius: 2px; }
-.range .fill { position: absolute; top: 13px; height: 4px; background: var(--rubric); border-radius: 2px; }
-.range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; height: 30px; }
-.range input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 22px; height: 22px; border-radius: 50%; background: var(--leaf); border: 2px solid var(--rubric); cursor: grab; box-shadow: 0 2px 6px var(--shadow); }
-.range input::-moz-range-thumb { pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--leaf); border: 2px solid var(--rubric); cursor: grab; }
+.range .rail, .range .fill { position: absolute; top: 13px; height: 4px; border-radius: 2px; }
+.range .rail { left: 0; right: 0; background: var(--rule); }
+.range .fill { background: var(--ink); }
+.range input { position: absolute; inset: 0; width: 100%; height: 30px; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; }
+.range input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 22px; height: 22px; border-radius: 50%; background: var(--sheet); border: 2px solid var(--ink); cursor: grab; }
+.range input::-moz-range-thumb { pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--sheet); border: 2px solid var(--ink); cursor: grab; }
 .range input::-webkit-slider-runnable-track { background: none; }
 .range input::-moz-range-track { background: none; }
 .range.single input { pointer-events: auto; }
-.presets { display: flex; flex-wrap: wrap; gap: 4px; }
-.presets button { font: .68rem var(--mono); border: 1px solid var(--rule); background: transparent; border-radius: 5px; padding: 3px 7px; min-height: 26px; }
+.presets { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.presets button { min-height: 28px; padding: 2px 8px; border: 1px solid var(--rule); border-radius: 5px; background: transparent; font-size: .8125rem; }
 .presets button:hover { border-color: var(--ink); }
-.foot { display: grid; gap: 8px; border-top: 1px solid var(--rule); padding-top: 12px; }
-.foot .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.foot .row > div { min-width: 0; }
-.poolinfo { font: .78rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; display: block; }
-.multtag { font: 500 1.25rem var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; flex: none; }
-.multtag.off { color: var(--rubric); font-size: 1rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (min-width: 900px) { .chips.scroll { max-height: 172px; overflow-y: auto; padding-bottom: 14px; mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); } }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 3px 12px; border: 1px solid var(--rule); border-radius: 999px; background: transparent; color: var(--muted); font-size: .9375rem; line-height: 1.3; }
+.chip[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 9%, transparent); border-color: var(--ink); color: var(--ink); }
+.chip .ct { font-size: .8125rem; opacity: .7; font-variant-numeric: lining-nums tabular-nums; }
+.chip.add { border-style: dashed; color: var(--muted); }
+.chip.add:hover { color: var(--ink); border-color: var(--ink); }
+.chip.add b { color: var(--rubric); }
+.addrow { position: relative; display: flex; gap: 8px; }
+.addrow .field { flex: 1; padding: 8px 12px; }
+.addrow .btn { min-height: 40px; padding: 6px 14px; }
+.foot { display: grid; gap: 12px; justify-items: start; padding-top: 18px; border-top: 1px solid var(--rule); }
+.foot .note { max-width: none; }
 
-/* ---------- modes ---------- */
-.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 520px; text-align: left; }
-@media (max-width: 440px) { .modes { grid-template-columns: 1fr; } }
-.modecard { border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; background: transparent; display: grid; gap: 4px; text-align: left; transition: border-color .2s, background .2s, transform .12s; position: relative; }
-.modecard:hover { border-color: var(--ink); }
-.modecard:active { transform: scale(.985); }
-.modecard[aria-pressed="true"] { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 8%, transparent); box-shadow: 0 0 0 1px var(--gold); }
-.modecard .g { font: 400 1.5rem/1 var(--display); color: var(--rubric); }
-.modecard b { font: 400 1.15rem/1.15 var(--display); }
-.modecard span { font-size: .84rem; color: var(--muted); line-height: 1.35; }
-.sizes { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
-.sizes button { font: 500 .78rem var(--mono); border: 1px solid var(--rule); background: transparent; border-radius: 6px; padding: 5px 12px; color: var(--muted); min-height: 32px; }
-.sizes button[aria-pressed="true"] { background: var(--ink); color: var(--leaf); border-color: var(--ink); }
-.sizes .lb { font: 500 .66rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 4px; }
+.chase { font-size: .9375rem; }
+.board { counter-reset: r; }
+.board li { counter-increment: r; display: grid; grid-template-columns: 2em minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.board li::before { content: counter(r); text-align: right; color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
+.board li.me { font-weight: 700; }
+.board li.me::before { color: var(--ink); }
+.board li.next::before { color: var(--rubric); font-weight: 700; }
+.board .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* the challenge card: who set it, how they did, and the songs once you've finished */
-.chal { width: 100%; max-width: 520px; display: grid; gap: 10px; text-align: left; }
-.chal-title { font: 400 clamp(1.5rem, 5vw, 2rem)/1.1 var(--display); margin: 0; text-align: center; text-wrap: balance; }
-.chal-lead { margin: 0; text-align: center; color: var(--muted); font-size: .95rem; max-width: 40ch; justify-self: center; }
-/* with a challenge open, the intro shows only the challenge; survival material stays out of the way */
-.wrap[data-chal="1"] #introLine, .wrap[data-chal="1"] .rules, .wrap[data-chal="1"] .shortrules, .wrap[data-chal="1"] .offices { display: none; }
-.wrap[data-chal="1"] #cellLamps { display: none; }
-.wrap[data-chal="1"] #cellSongs { display: grid; }
-.wrap[data-chal="1"] .cell.gm { display: none !important; }
-.chal .from { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; border: 1px dashed color-mix(in srgb, var(--gold) 60%, transparent); border-radius: 8px; padding: 8px 12px; background: color-mix(in srgb, var(--gold) 6%, transparent); font-size: .9rem; }
-.chal .from .g { font: 1.4rem/1 var(--display); color: var(--gold); }
-.chal .from small { display: block; color: var(--muted); font: .72rem var(--mono); }
-.chal .mode { text-align: center; }
-.chal #chalStartBtn { justify-self: center; margin-top: 2px; }
-.chal .hym summary { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-/* survival's own Begin button and mode line hide while a challenge is open; the card has its own */
-.wrap[data-chal="1"] #startBtn, .wrap[data-chal="1"] #modeLine { display: none; }
-@media (max-width: 899px) { .wrap[data-chal="1"] .top .tag { display: none; } .wrap[data-chal="1"] #game { padding-top: 14px; } }
-.chips.ro .chip { cursor: default; font-size: .8rem; padding: 2px 9px; min-height: 26px; }
-.share { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; width: 100%; max-width: 520px; }
-.share .link { display: flex; gap: 6px; align-items: center; border: 1px solid var(--rule); border-radius: 8px; background: var(--page); padding: 4px 4px 4px 12px; min-width: 0; }
-.share .link .btn { flex: none; }
-.share .link code { flex: 1; min-width: 0; font: .8rem var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.share .link .btn { padding: 7px 12px; min-height: 36px; }
-.share .btn.copied { background: var(--good); border-color: var(--good); color: #fff; }
-.compare { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; width: 100%; max-width: 520px; text-align: left; }
-.compare li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; animation: slidein .3s ease-out backwards; }
-.compare li.me { border-color: color-mix(in srgb, var(--gold) 60%, transparent); background: color-mix(in srgb, var(--gold) 10%, transparent); }
-.compare li .rk { font: .78rem var(--mono); color: var(--muted); text-align: right; }
-.compare li:first-child .rk { color: var(--gold); }
-.compare li .nm { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.compare li .nm small { font: .68rem var(--mono); color: var(--muted); margin-left: 6px; font-weight: 400; }
-.compare li .sc { font: 500 .95rem var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
-.compare li .strip { grid-column: 2 / -1; justify-content: flex-start; max-width: none; }
-.compare li .strip i { width: 16px; height: 16px; font-size: .5rem; }
-.songlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; width: 100%; max-width: 520px; text-align: left; }
-.songlist li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 5px 0; border-bottom: 1px dotted var(--rule); font-size: .9rem; }
-.songlist img { width: 34px; height: 34px; border-radius: 4px; object-fit: cover; background: var(--rule); }
-.songlist .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.songlist .t small { display: block; color: var(--muted); font-size: .76rem; }
-.songlist .r { font: .72rem var(--mono); color: var(--muted); white-space: nowrap; }
-.songlist .r.w { color: var(--good); }
-.songlist .r.l { color: var(--rubric); }
-.strip.mini i { width: 14px; height: 14px; font-size: .48rem; }
+/* ---------- phone nav ---------- */
+.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 0 8px env(safe-area-inset-bottom, 0px); background: var(--page); border-top: 1px solid var(--rule); }
+.nav button { position: relative; min-height: var(--nav-h); border: 0; background: none; color: var(--muted); font-weight: 500; }
+.nav button[aria-pressed="true"] { color: var(--ink); }
+.nav button[aria-pressed="true"]::before { content: ""; position: absolute; top: -1px; left: 28%; right: 28%; height: 2px; background: var(--ink); }
+@media (min-width: 900px) { .nav { display: none; } }
 
-/* opt-in gamification: hide the extras until switched on */
-/* rank, offices and XP stay off the front page until the Record tab has been opened */
-html:not([data-game="on"]) .gm { display: none !important; }
-.foot-note { font-size: .8rem; color: var(--muted); margin: 0; text-align: center; }
-
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; } .toast { animation: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
@@ -522,128 +336,118 @@ html:not([data-game="on"]) .gm { display: none !important; }
   <header class="top">
     <div>
       <h1><a href="./" id="homeLink" aria-label="Psalmless home"><span class="p">P</span>salmless</a></h1>
-      <div class="tag">Name the worship song from the first half-second</div>
+      <p class="tag">Name the worship song from the first half-second</p>
     </div>
+    <dl class="hud" aria-live="polite">
+      <div class="cell"><dt>Score</dt><dd id="hScore">0</dd><dd class="sub" id="hChase">Best 0</dd></div>
+      <div class="cell"><dt>Streak</dt><dd id="hStreak">0</dd><dd class="sub" id="hBonus"></dd></div>
+      <div class="cell" id="cellLamps"><dt>Lamps</dt><dd class="lamps" id="lamps"></dd><dd class="sub" id="hLampHint">3 lit</dd></div>
+      <div class="cell" id="cellSongs" hidden><dt>Songs</dt><dd id="hSongs">0/5</dd><dd class="sub" id="hSongsHint">Challenge</dd></div>
+    </dl>
     <button class="iconbtn" id="sfxBtn" aria-pressed="true" aria-label="Sound effects" title="Sound effects">
       <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7"/><path class="on" d="M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16 9l5 6M21 9l-5 6"/></svg>
     </button>
-    <div class="hud" aria-live="polite">
-      <div class="cell score"><span class="k">Score</span><span class="v" id="hScore">0</span><span class="tl" id="hChase">Best 0</span></div>
-      <div class="cell"><span class="k">Streak <b id="hBonus"></b></span><span class="v" id="hStreak">0</span><div class="combo" id="combo"></div></div>
-      <div class="cell" id="cellLamps"><span class="k">Lamps</span><div class="lamps" id="lamps"></div><span class="tl" id="hLampHint">3 lit</span></div>
-      <div class="cell" id="cellSongs" hidden><span class="k">Songs</span><span class="v" id="hSongs">1/5</span><span class="tl" id="hSongsHint">challenge</span></div>
-      <div class="cell gm"><span class="k">Rank</span><span class="v" id="hLevel">I</span><div class="tier"><i id="hXp"></i></div><span class="tl" id="hLevelName">Novice</span></div>
-    </div>
   </header>
 
   <div class="cols">
-    <section class="leaf" id="game" aria-live="polite">
-      <div class="rays"></div>
-      <h2><span><span class="v">℣</span><span id="gameTitle">Listen</span></span><small id="roundTag"></small></h2>
+    <section id="game" aria-live="polite">
+      <h2 class="head" id="gameHead"><span><span class="v">℣</span><span id="gameTitle">Listen</span></span><small id="roundTag"></small></h2>
 
       <div class="intro" id="intro">
-        <p class="big" id="introLine">“Sing to the LORD a new song.”</p>
-        <div class="rules">
-          <div><b>Listen</b>Half a second. Skips and misses unlock more.</div>
-          <div><b>Score</b>1000 at 0.5s down to 100 at 16s. Streaks add up to +100%.</div>
-          <div><b>Three lamps</b>A missed song puts one out. Five in a row relights one.</div>
-        </div>
-        <p class="shortrules">Name it from <b>0.5s</b> for <b>1000</b> points. Skips unlock more.</p>
+        <blockquote class="verse big" id="introLine"></blockquote>
+        <p class="lede" id="lede">Hear half a second of a worship song and name it for 1,000 points. Each skip or miss plays a little more, for fewer points.</p>
+
         <div class="chal" id="chalIntro" hidden>
           <h3 class="chal-title" id="chalTitle">A challenge for you</h3>
-          <p class="chal-lead" id="chalLead"></p>
-          <div class="from"><span class="g">✉</span><div><b id="chalFrom"></b><small id="chalFromSub"></small></div></div>
-          <div class="mode" id="chalMode"></div>
-          <button class="btn gold big" id="chalStartBtn" disabled>Take the challenge</button>
-          <details class="more hym" id="chalHym" open hidden>
-            <summary>Their hymnal <span class="hint" id="chalHymLine" style="display:inline;text-transform:none;letter-spacing:0"></span></summary>
+          <p id="chalLead"></p>
+          <p class="note" id="chalFrom"></p>
+          <div class="go">
+            <button class="btn primary big" id="chalStartBtn" disabled>Take the challenge</button>
+            <p class="note" id="chalMode"></p>
+          </div>
+          <details class="more" id="chalHym" open hidden>
+            <summary>Their hymnal: <span id="chalHymLine"></span></summary>
             <div>
               <div class="chips ro" id="chalArtists"></div>
-              <button class="btn ghost" id="useHymBtn" type="button" style="justify-self:start;margin-top:2px">Copy this hymnal to my settings</button>
+              <button class="btn ghost" id="useHymBtn" type="button" style="justify-self:start">Use these artists in my hymnal</button>
             </div>
           </details>
         </div>
-        <div class="modes" id="modes">
-          <button class="modecard" data-mode="survival" aria-pressed="true"><span class="g">🕯</span><b>Survival</b><span>Play until three lamps go out. Streaks relight them. Ranked in the Book of Life.</span></button>
-          <button class="modecard" data-mode="set" aria-pressed="false"><span class="g">✉</span><b>Challenge</b><span>A fixed set, easy to hard. Finish, then send the link and compare.</span></button>
+
+        <div class="choose" id="choose">
+          <div class="seg" id="modes" role="group" aria-label="Game mode">
+            <button data-mode="survival" aria-pressed="true">Survival</button>
+            <button data-mode="set" aria-pressed="false">Challenge</button>
+          </div>
+          <p class="note" id="modeDesc"></p>
+          <div class="sizes" id="sizes" hidden><span class="lb">Songs</span><button data-n="5" aria-pressed="true">5</button><button data-n="10" aria-pressed="false">10</button><button data-n="15" aria-pressed="false">15</button><button data-n="20" aria-pressed="false">20</button></div>
         </div>
-        <div class="sizes" id="sizes" hidden><span class="lb">Songs</span><button data-n="5" aria-pressed="true">5</button><button data-n="10" aria-pressed="false">10</button><button data-n="15" aria-pressed="false">15</button><button data-n="20" aria-pressed="false">20</button></div>
-        <div class="offices gm">
-          <div class="label"><span>Today's offices</span><span id="questDay"></span></div>
-          <div id="quests" style="display:grid;gap:6px"></div>
+        <div class="go" id="startGo">
+          <button class="btn primary big" id="startBtn" disabled>Begin</button>
+          <p class="note" id="modeLine"></p>
         </div>
-        <div class="mode" id="modeLine"></div>
-        <button class="btn gold big" id="startBtn" disabled>Begin</button>
       </div>
 
       <div id="play" hidden>
-        <div class="stack">
-          <div class="slots" id="slots"></div>
-          <div class="stakes"><span>This guess is worth <span class="worth" id="worth">1,000</span></span><span class="fire" id="fireTag"></span></div>
+        <div class="round">
+          <ol class="slots" id="slots" aria-label="Clip lengths and points"></ol>
           <div class="player">
             <button class="play" id="playBtn" aria-label="Play clip">
               <svg class="tri" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>
               <svg class="replay" viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
             </button>
-            <div class="bar">
-              <div class="track" id="track"><div class="unlocked" id="unlocked"></div><div class="prog" id="prog"></div></div>
-              <div class="scale"><span id="clipLen">0.5s unlocked</span><span class="eq" id="eq"></span><span>16s</span></div>
+            <div class="stakes">
+              <p class="worth" id="worthLine"><span id="worth">1,000</span><small>points if you name it now</small></p>
+              <p class="fire" id="fireTag"></p>
             </div>
           </div>
           <div class="guessrow" id="guessRow">
             <div class="inwrap">
-              <input id="guess" type="text" placeholder="Type a song title…" autocomplete="off" autocapitalize="off" enterkeyhint="go">
+              <input class="field" id="guess" type="text" placeholder="Type a song title" aria-label="Song title" autocomplete="off" autocapitalize="off" enterkeyhint="go">
               <ul class="sugg" id="sugg" hidden></ul>
             </div>
             <div class="acts2">
-              <button class="btn" id="submitBtn">Guess <span class="kbd">⏎</span></button>
-              <button class="btn ghost" id="skipBtn">Skip <span class="kbd">⇧⏎</span></button>
+              <button class="btn primary" id="submitBtn">Guess <span class="kbd">⏎</span></button>
+              <button class="btn" id="skipBtn">Skip</button>
             </div>
           </div>
-          <div class="guesslog" id="log"></div>
+          <ul class="guesslog" id="log"></ul>
           <div class="reveal" id="reveal" hidden>
             <img id="rvArt" alt="">
-            <div>
-              <div class="verdict" id="rvVerdict"></div>
+            <div class="rv-text">
+              <p class="verdict" id="rvVerdict"></p>
               <h3 id="rvTitle"></h3>
-              <p id="rvMeta"></p>
-              <div class="gain" id="rvGain"></div>
-              <div class="verse" id="rvVerse"></div>
-              <div class="acts">
-                <button class="btn gold" id="nextBtn">Next song <span class="kbd">⏎</span></button>
-                <button class="btn ghost" id="fullBtn">Play preview</button>
-                <a id="rvLink" href="#" target="_blank" rel="noopener" class="btn ghost" style="text-decoration:none">Apple Music ↗</a>
-              </div>
+              <p class="meta" id="rvMeta"></p>
+              <p class="gain" id="rvGain"></p>
+              <blockquote class="verse" id="rvVerse"></blockquote>
+            </div>
+            <div class="acts">
+              <button class="btn primary" id="nextBtn">Next song</button>
+              <a class="btn ghost" id="rvLink" href="#" target="_blank" rel="noopener">Open in Apple Music</a>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="intro over" id="over" hidden>
-        <p class="title" id="overTitle"></p>
-        <div class="final" id="overScore">0</div>
-        <div class="verse" id="overVerse"></div>
-        <div class="strip" id="strip" aria-label="Songs this run"></div>
-        <div class="sumrow">
-          <span>Named <b id="oCorrect">0</b></span>
-          <span>Best streak <b id="oStreak">0</b></span>
-          <span>Pool <b id="oPool">0</b> × <b id="oMult">1</b></span>
-        </div>
-        <div class="rewards" id="rewards"></div>
+      <div class="over" id="over" hidden>
+        <p class="final num" id="overScore">0</p>
+        <blockquote class="verse" id="overVerse"></blockquote>
+        <div class="strip" id="strip" aria-label="Each song this game"></div>
+        <p class="note" id="overSum"></p>
+        <form class="nameform" id="nameForm">
+          <input class="field" id="nameInput" maxlength="20" placeholder="Your name for the leaderboard" aria-label="Your name" autocomplete="nickname">
+          <button class="btn primary" type="submit">Add to leaderboard</button>
+        </form>
+        <p class="note" id="overStatus"></p>
         <div class="share" id="share" hidden>
-          <div class="label"><span>Send this challenge</span><span id="shareSub"></span></div>
-          <div class="link"><code id="shareUrl"></code><button class="btn" id="copyBtn" type="button">Copy link</button><button class="btn ghost" id="shareBtn" type="button" hidden>Share</button></div>
+          <p class="label"><span>Send this challenge</span><span id="shareSub"></span></p>
+          <div class="link"><code id="shareUrl"></code><button class="btn primary" id="copyBtn" type="button">Copy link</button><button class="btn ghost" id="shareBtn" type="button" hidden>Share</button></div>
         </div>
         <ol class="compare" id="compare" hidden></ol>
-        <details class="more" id="songsBox" hidden style="width:100%;max-width:520px;text-align:left"><summary>The songs</summary><ol class="songlist" id="songlist"></ol></details>
-        <form class="nameform" id="nameForm">
-          <input id="nameInput" maxlength="20" placeholder="Your name for the Book of Life" autocomplete="nickname">
-          <button class="btn gold" type="submit">Inscribe</button>
-        </form>
-        <p class="status" id="overStatus"></p>
+        <details class="more" id="songsBox" hidden><summary>The songs</summary><div><ol class="songlist" id="songlist"></ol></div></details>
         <div class="acts">
-          <button class="btn gold" id="againBtn">Play again</button>
-          <button class="btn ghost" id="seeBoardBtn">See the Book</button>
+          <button class="btn primary" id="againBtn">Play again</button>
+          <button class="btn ghost" id="seeBoardBtn">View leaderboard</button>
           <button class="btn ghost" id="newSetBtn" hidden>New challenge</button>
         </div>
       </div>
@@ -653,24 +457,23 @@ html:not([data-game="on"]) .gm { display: none !important; }
 
     <div class="side">
       <div class="side-tabs" role="tablist">
-        <button data-view="hymnal" aria-pressed="true"><span class="g">℟</span>Hymnal</button>
-        <button data-view="board" aria-pressed="false"><span class="g">✠</span>Book of Life<span class="dot" data-dot="board" hidden></span></button>
-        <button data-view="record" aria-pressed="false"><span class="g">♔</span>Record<span class="dot" data-dot="record" hidden></span></button>
+        <button data-view="hymnal" aria-pressed="true"><span class="v">℟</span>Hymnal</button>
+        <button data-view="board" aria-pressed="false">Leaderboard</button>
       </div>
 
-      <section class="leaf panel" data-panel="hymnal" id="settings">
-        <h2><span><span class="v">℟</span>Your hymnal</span><small id="selCount">0 artists</small></h2>
+      <section class="panel" data-panel="hymnal" id="settings">
+        <h2 class="head"><span><span class="v">℟</span>Your hymnal</span></h2>
 
         <div class="knobs">
           <div class="knob">
-            <div class="label"><span>Popularity</span></div>
+            <div class="label">Popularity</div>
             <div class="val" id="popLabel"></div>
             <div class="range single"><div class="rail"></div><div class="fill" id="popFill" style="left:0"></div>
-              <input type="range" id="pop" min="0" max="4" step="1" aria-label="Popularity filter"></div>
-            <div class="scale"><span>Hits</span><span>Deep cuts</span></div>
+              <input type="range" id="pop" min="0" max="4" step="1" aria-label="Popularity"></div>
+            <div class="ends"><span>Hits</span><span>Deep cuts</span></div>
           </div>
           <div class="knob">
-            <div class="label"><span>Years</span></div>
+            <div class="label">Years</div>
             <div class="val"><span id="yMinV"></span> <span class="dash">–</span> <span id="yMaxV"></span></div>
             <div class="range">
               <div class="rail"></div><div class="fill" id="yFill"></div>
@@ -681,15 +484,15 @@ html:not([data-game="on"]) .gm { display: none !important; }
               <button data-y="1968-1989">'70s–80s</button>
               <button data-y="1990-2004">'90s</button>
               <button data-y="2005-2014">'05–14</button>
-              <button data-y="2015-2026">Modern</button>
-              <button data-y="1965-2026">All</button>
+              <button data-y="2015-now">Modern</button>
+              <button data-y="1965-now">All</button>
             </div>
           </div>
         </div>
 
-        <div style="display:grid;gap:6px">
-          <div class="label"><span>Artists</span>
-            <span><button class="linkbtn" id="allBtn">All</button> · <button class="linkbtn" id="noneBtn">None</button> · <button class="linkbtn" id="resetBtn">Reset</button></span></div>
+        <div class="group">
+          <div class="label"><span id="selCount">0 artists</span>
+            <span><button class="linkbtn" id="allBtn">All</button>, <button class="linkbtn" id="noneBtn">none</button>, <button class="linkbtn" id="resetBtn">reset</button></span></div>
           <div class="chips scroll" id="chips"></div>
         </div>
 
@@ -697,69 +500,40 @@ html:not([data-game="on"]) .gm { display: none !important; }
           <summary>Add artists</summary>
           <div>
             <form class="addrow" id="addForm">
-              <input id="addInput" type="text" placeholder="Search Apple Music, e.g. SEU Worship" autocomplete="off">
+              <input class="field" id="addInput" type="text" placeholder="Search Apple Music, e.g. SEU Worship" aria-label="Search for an artist" autocomplete="off">
               <button class="btn ghost" type="submit">Search</button>
               <ul class="sugg" id="artistResults" hidden></ul>
             </form>
-            <p class="hint" id="featHint" hidden>Featured on songs by your picks</p>
+            <p class="note" id="featHint" hidden>Featured on songs by your picks</p>
             <div class="chips" id="featured"></div>
-            <div class="label"><span>Worship collectives</span><button class="linkbtn" id="shuffleBtn">Shuffle</button></div>
+            <div class="label"><span>Worship collectives</span><button class="linkbtn" id="shuffleBtn">Show others</button></div>
             <div class="chips" id="discover"></div>
           </div>
         </details>
 
         <div class="foot">
-          <div class="row">
-            <div style="display:grid;gap:2px">
-              <span class="poolinfo" id="poolInfo">Counting songs…</span>
-              <span class="hint" id="multHint">Bigger, more varied pools score higher</span>
-            </div>
-            <span class="multtag" id="multTag">×—</span>
-          </div>
-          <div class="meter"><i id="multMeter" style="width:0"></i></div>
-          <button class="btn" id="applyBtn">Deal new songs</button>
+          <p id="poolInfo">Counting songs…</p>
+          <p class="note" id="multHint"></p>
+          <button class="btn" id="applyBtn">Play this hymnal</button>
         </div>
       </section>
 
-      <section class="leaf panel" data-panel="board" id="boardBox">
-        <h2><span><span class="v">✠</span>Book of Life</span>
-          <span class="tabs"><button data-p="all" aria-pressed="true">All time</button><button data-p="week" aria-pressed="false">Week</button></span></h2>
-        <div class="chase" id="chase" hidden><span class="g">♔</span><div><b id="chaseT"></b><small id="chaseS"></small></div></div>
+      <section class="panel" data-panel="board" id="boardBox">
+        <h2 class="head"><span>Leaderboard</span></h2>
+        <div class="tabs"><button data-p="all" aria-pressed="true">All time</button><button data-p="week" aria-pressed="false">This week</button></div>
+        <p class="chase" id="chase" hidden></p>
         <ol class="board" id="board"></ol>
-        <p class="empty" id="boardEmpty" hidden>No names written yet. Be the first.</p>
-      </section>
-
-      <section class="leaf panel" data-panel="record" id="recordBox">
-        <h2><span><span class="v">♔</span>Your record</span><small id="recDays"></small></h2>
-        <div class="level">
-          <div class="sigil" id="lvSigil">I</div>
-          <div>
-            <div class="nm" id="lvName">Novice</div>
-            <div class="sub"><span id="lvXp">0 XP</span><span id="lvNext"></span></div>
-            <div class="meter"><i id="lvMeter" style="width:0"></i></div>
-          </div>
-        </div>
-        <div class="stats" id="stats"></div>
-        <div style="display:grid;gap:6px">
-          <div class="label"><span>Badges</span><span id="badgeCount"></span></div>
-          <div class="badges" id="badges"></div>
-        </div>
-        <div style="display:grid;gap:6px">
-          <div class="label"><span>Today's offices</span><span id="questDay2"></span></div>
-          <div id="quests2" style="display:grid;gap:6px"></div>
-        </div>
+        <p class="note" id="boardEmpty" hidden>No scores yet. Finish a ranked game to be the first.</p>
       </section>
     </div>
   </div>
 </div>
 
 <nav class="nav" aria-label="Sections">
-  <button data-view="play" aria-pressed="true"><span class="g">℣</span>Play</button>
-  <button data-view="hymnal" aria-pressed="false"><span class="g">℟</span>Hymnal</button>
-  <button data-view="board" aria-pressed="false"><span class="g">✠</span>Book<span class="dot" data-dot="board" hidden></span></button>
-  <button data-view="record" aria-pressed="false"><span class="g">♔</span>Record<span class="dot" data-dot="record" hidden></span></button>
+  <button data-view="play" aria-pressed="true">Play</button>
+  <button data-view="hymnal" aria-pressed="false">Hymnal</button>
+  <button data-view="board" aria-pressed="false">Leaderboard</button>
 </nav>
-<div class="toasts" id="toasts" aria-live="polite"></div>
 
 <audio id="audio" preload="auto"></audio>
 
@@ -768,7 +542,6 @@ const API = location.hostname === "localhost" || location.hostname === "127.0.0.
   ? "http://localhost:8787/api" : "https://psalmless-api.psalmless-api.workers.dev/api";
 const CLIPS = [0.5, 1, 2, 4, 8, 16];
 const STAGE_PTS = [1000, 700, 500, 350, 200, 100];
-const MAX = CLIPS[CLIPS.length - 1];
 const LIVES = 3;
 const THIS_YEAR = new Date().getFullYear();
 const ARTISTS = [
@@ -784,14 +557,20 @@ const ARTISTS = [
 ];
 const DEFAULT_ON = ["Elevation Worship", "Hillsong Worship", "Bethel Music", "Chris Tomlin", "Phil Wickham",
   "Lauren Daigle", "for KING & COUNTRY", "Casting Crowns", "MercyMe", "Maverick City Music", "Brandon Lake", "Crowder"];
+// phrase reads inside a sentence: "212 songs: the top 10 per artist, 1965–2026"
 const POP_STEPS = [
-  { short: "Top 3 per artist",  label: "Signature songs" },
-  { short: "Top 10 per artist", label: "Radio hits" },
-  { short: "Top 25 per artist", label: "Fan favorites" },
-  { short: "Top 60 per artist", label: "Deep cuts" },
-  { short: "All songs",         label: "Everything" }
+  { phrase: "the top 3 per artist",  label: "Signature songs" },
+  { phrase: "the top 10 per artist", label: "Radio hits" },
+  { phrase: "the top 25 per artist", label: "Fan favorites" },
+  { phrase: "the top 60 per artist", label: "Deep cuts" },
+  { phrase: "every song",            label: "Everything" }
 ];
 const DEFAULT_POP = 1, DEFAULT_YEARS = [1965, THIS_YEAR];
+const SET_SIZES = [5, 10, 15, 20];
+const MODE_DESC = {
+  survival: "Play until your three lamps go out. Five right in a row relights one. Ranked games go on the leaderboard.",
+  set: "A fixed set of songs, easy to hard. When you finish, send the link to friends and compare scores."
+};
 
 /* ---------- scripture ---------- */
 const V = {
@@ -821,9 +600,6 @@ const V = {
   ],
   wrong: ["Not quite, Thomas.", "A false prophet!", "Not that one.", "Scribes and Pharisees!", "Wrong psalm.", "Selah. Try again.", "Close, but no manna."],
   skip: ["Be still…", "Patience, Job.", "Wait upon the LORD…", "More light…", "Selah."],
-  streak: { 3: "Threefold cord", 5: "Five smooth stones", 7: "Seventh day", 10: "Ten commandments", 12: "Twelve tribes", 40: "Forty days" },
-  lampOut: ["A lamp has gone out.", "Your oil runs low.", "Trim your wicks."],
-  lampBack: "Five in a row. A lamp is relit.",
   over: [
     [0, "Dust to dust", ["For dust you are, and to dust you shall return.", "Genesis 3:19"]],
     [1500, "Mustard seed", ["Faith as small as a mustard seed can move mountains.", "Matthew 17:20"]],
@@ -831,49 +607,10 @@ const V = {
     [12000, "Temple choir", ["The singers and trumpeters joined in unison, as one voice.", "2 Chronicles 5:13"]],
     [25000, "Sweet psalmist of Israel", ["David, the sweet psalmist of Israel.", "2 Samuel 23:1"]],
     [50000, "Heavenly host", ["Suddenly there was with the angel a multitude of the heavenly host praising God.", "Luke 2:13"]]
-  ],
-  board: ["Rejoice that your names are written in heaven.", "Luke 10:20"]
+  ]
 };
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const verseHTML = v => `“${esc(v[0])}”${v[1] ? `<cite>${esc(v[1])}</cite>` : ""}`;
-
-/* ---------- progression ---------- */
-// Lifetime XP is earned from points (1 XP per 10 points) plus flat awards for offices and badges.
-const LEVELS = [
-  ["I", "Novice", 0], ["II", "Chorister", 300], ["III", "Cantor", 900], ["IV", "Levite", 2000],
-  ["V", "Psalmist", 4000], ["VI", "Precentor", 7500], ["VII", "Minstrel of the Temple", 13000],
-  ["VIII", "Asaph's line", 22000], ["IX", "Sweet psalmist", 36000], ["X", "Heavenly host", 60000]
-];
-const BADGES = [
-  { id: "first",   g: "♪", n: "First psalm",   d: "Name your first song.",                      t: p => p.correct >= 1 },
-  { id: "half",    g: "½", n: "Half a second", d: "Name a song from the 0.5s clip.",            t: p => p.stage0 >= 1 },
-  { id: "cord",    g: "Ⅲ", n: "Threefold cord", d: "Streak of 3 in one run.",                   t: p => p.bestStreak >= 3 },
-  { id: "stones",  g: "Ⅴ", n: "Five stones",   d: "Streak of 5. Relights a lamp.",             t: p => p.bestStreak >= 5 },
-  { id: "decalog", g: "Ⅹ", n: "Decalogue",     d: "Streak of 10 in one run.",                  t: p => p.bestStreak >= 10 },
-  { id: "seed",    g: "✦", n: "Mustard seed",  d: "Score 1,500 in a run.",                     t: p => p.bestScore >= 1500 },
-  { id: "servant", g: "✠", n: "Faithful servant", d: "Score 5,000 in a run.",                  t: p => p.bestScore >= 5000 },
-  { id: "choir",   g: "♫", n: "Temple choir",  d: "Score 12,000 in a run.",                    t: p => p.bestScore >= 12000 },
-  { id: "century", g: "C", n: "Centurion",     d: "Name 100 songs, lifetime.",                  t: p => p.correct >= 100 },
-  { id: "flock",   g: "♔", n: "Book of Life",  d: "Inscribe a score on the leaderboard.",      t: p => p.inscribed >= 1 },
-  { id: "week",    g: "7", n: "Sabbath keeper", d: "Play on 7 different days.",                 t: p => p.days >= 7 },
-  { id: "deep",    g: "⚓", n: "Deep cuts",     d: "Name a song ranked outside an artist's top 25.", t: p => p.deep >= 1 },
-  { id: "hymnal",  g: "℟", n: "Wide hymnal",   d: "Finish a run with 200+ songs in the pool.", t: p => p.bigPool >= 1 },
-  { id: "lampr",   g: "🕯", n: "Trimmed wick",  d: "Relight a lamp mid-run.",                   t: p => p.relit >= 1 },
-  { id: "perfect", g: "★", n: "Spotless",      d: "Finish a run of 10+ songs without a miss.", t: p => p.spotless >= 1 }
-];
-// Three offices a day, drawn from this list with the date as the seed, so everyone gets the same set.
-const OFFICES = [
-  { id: "name5",   t: "Name 5 songs",              k: "correct", n: 5,  xp: 60 },
-  { id: "name12",  t: "Name 12 songs",             k: "correct", n: 12, xp: 120 },
-  { id: "fast3",   t: "Name 3 from the first second", d: "0.5s or 1s clip", k: "fast", n: 3, xp: 90 },
-  { id: "streak4", t: "Reach a streak of 4",       k: "streak", n: 4,  xp: 80 },
-  { id: "streak7", t: "Reach a streak of 7",       k: "streak", n: 7,  xp: 150 },
-  { id: "score3k", t: "Score 3,000 in one run",    d: "Your best run today counts", k: "run", n: 3000, xp: 100 },
-  { id: "score8k", t: "Score 8,000 in one run",    d: "Your best run today counts", k: "run", n: 8000, xp: 200 },
-  { id: "runs2",   t: "Finish 2 runs",             k: "runs", n: 2,  xp: 70 },
-  { id: "half2",   t: "Name 2 from half a second", k: "stage0", n: 2, xp: 120 },
-  { id: "inscribe", t: "Inscribe a score",         k: "inscribed", n: 1, xp: 80 }
-];
 
 const $ = id => document.getElementById(id);
 const store = {
@@ -881,11 +618,12 @@ const store = {
   set(k, v) { try { localStorage.setItem("psalmless:" + k, JSON.stringify(v)); } catch {} }
 };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const yearSpan = (a, b) => `${a}\u2060–\u2060${b}`;
+const ordinal = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
 function norm(t) {
   return t.replace(/\s*[\(\[].*?[\)\]]/g, "").replace(/\s+-\s+.*$/, "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/&/g, "and").replace(/[^a-z0-9 ]/g, "").replace(/^the /, "").replace(/\s+/g, " ").trim();
 }
-const today = () => new Date().toISOString().slice(0, 10);
 
 let artists = store.get("artists", ARTISTS.map(n => ({ name: n, on: DEFAULT_ON.includes(n) })));
 let years = store.get("years", DEFAULT_YEARS);
@@ -893,20 +631,11 @@ let popIdx = store.get("pop2", DEFAULT_POP);
 let best = store.get("best", 0);
 let myName = store.get("name", "");
 let sfxOn = store.get("sfx", true);
-let gmOn = store.get("gm", false);           // true once the Record tab has been opened; then rank extras show on the front page too
 let mode = store.get("mode", "survival");    // survival | set
 let setSize = store.get("setSize", 5);
-const SET_SIZES = [5, 10, 15, 20];
 // a challenge link is /#c-<id>; the id is a short token the server minted for the set
 let chal = (location.hash.match(/^#c-([a-z0-9]{8})$/) || [])[1] || null;
 let chalInfo = null;
-// lifetime record
-let prof = Object.assign({ xp: 0, correct: 0, stage0: 0, deep: 0, bestStreak: 0, bestScore: 0, runs: 0, inscribed: 0, relit: 0,
-  spotless: 0, bigPool: 0, dayList: [], badges: [], listens: 0, songs: 0 }, store.get("prof", {}));
-prof.days = prof.dayList.length;
-// the current run's local tally (server owns the score; this is for offices, badges and the summary strip)
-let tally = store.get("tally", null);
-let daily = store.get("daily", null);
 let run = null;
 let titles = [];
 let busy = false;
@@ -921,7 +650,7 @@ async function api(path, body) {
 }
 function settings() { return { artists: artists.filter(a => a.on).map(a => a.name), years, pop: popIdx }; }
 
-/* ---------- sound effects (synthesized, no files) ---------- */
+/* ---------- sound (synthesized, no files) ---------- */
 let sctx = null;
 function sfx(kind) {
   if (!sfxOn || !window.AudioContext) return;
@@ -937,54 +666,35 @@ function sfx(kind) {
     };
     if (kind === "right") { tone(523, 0, .35); tone(659, .08, .35); tone(784, .16, .5); }
     else if (kind === "wrong") { tone(180, 0, .25, "triangle", .1); tone(140, .12, .3, "triangle", .1); }
-    else if (kind === "skip") { tone(440, 0, .12, "sine", .06); tone(392, .1, .16, "sine", .06); }
-    else if (kind === "tick") { tone(880, 0, .05, "square", .03); }
     else if (kind === "lamp") { tone(220, 0, .5, "sawtooth", .06); tone(110, .2, .7, "sawtooth", .06); }
     else if (kind === "relit") { tone(659, 0, .2); tone(880, .12, .3); tone(1175, .24, .5); }
-    else if (kind === "fanfare") { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .11, .5, "triangle", .1)); tone(1319, .5, .9, "triangle", .1); }
-    else if (kind === "badge") { tone(784, 0, .25, "triangle", .08); tone(1047, .15, .4, "triangle", .08); }
-    else if (kind === "over") { tone(392, 0, .6, "triangle", .08); tone(311, .3, .8, "triangle", .08); tone(262, .6, 1.2, "triangle", .08); }
   } catch {}
 }
-$("sfxBtn").onclick = () => { sfxOn = !sfxOn; store.set("sfx", sfxOn); $("sfxBtn").setAttribute("aria-pressed", sfxOn); if (sfxOn) sfx("tick"); };
+function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch {} }
+$("sfxBtn").onclick = () => { sfxOn = !sfxOn; store.set("sfx", sfxOn); $("sfxBtn").setAttribute("aria-pressed", sfxOn); };
 $("sfxBtn").setAttribute("aria-pressed", sfxOn);
-function renderGm(first) {
-  document.documentElement.dataset.game = gmOn ? "on" : "off";
-  if (first) { const els = document.querySelectorAll(".gm"); els.forEach(e => e.classList.add("just-on")); setTimeout(() => els.forEach(e => e.classList.remove("just-on")), 600); }
-}
+
 function renderModes() {
-  document.querySelectorAll(".modecard").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
+  document.querySelectorAll("#modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
+  $("modes").hidden = !!chal;
   $("sizes").hidden = mode !== "set" || !!chal;
   document.querySelectorAll("#sizes button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.n === setSize));
-  $("modes").hidden = !!chal;
-  $("startBtn").textContent = chal ? "Take the challenge" : mode === "set" ? `Begin a set of ${setSize}` : "Begin";
+  $("modeDesc").textContent = MODE_DESC[mode];
+  $("startBtn").textContent = mode === "set" ? `Begin a set of ${setSize}` : "Begin";
   renderMode();
 }
-document.querySelectorAll(".modecard").forEach(b => b.onclick = () => { mode = b.dataset.mode; store.set("mode", mode); sfx("tick"); renderModes(); });
-document.querySelectorAll("#sizes button").forEach(b => b.onclick = () => { setSize = +b.dataset.n; store.set("setSize", setSize); sfx("tick"); renderModes(); });
-
-/* ---------- toasts ---------- */
-function toast(glyph, text, sub, cls = "", life = 3200) {
-  const t = document.createElement("div");
-  t.className = "toast " + cls; t.style.setProperty("--life", life + "ms");
-  t.innerHTML = `<span class="g">${glyph}</span><div class="t">${esc(text)}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
-  $("toasts").appendChild(t);
-  setTimeout(() => t.remove(), life + 500);
-}
+document.querySelectorAll("#modes button").forEach(b => b.onclick = () => { mode = b.dataset.mode; store.set("mode", mode); renderModes(); });
+document.querySelectorAll("#sizes button").forEach(b => b.onclick = () => { setSize = +b.dataset.n; store.set("setSize", setSize); renderModes(); });
 
 /* ---------- views ---------- */
 const wide = matchMedia("(min-width: 900px)");
 let view = "play";
-// a pulsing dot on a tab means something new is waiting there
-function dot(which, on) { if (on && view === which) return; document.querySelectorAll(`[data-dot="${which}"]`).forEach(d => d.hidden = !on); }
 function setView(v) {
   if (v === "play" && wide.matches) v = "hymnal";
   view = v;
   $("wrap").dataset.view = v;
-  document.querySelectorAll(".nav button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
-  document.querySelectorAll(".side-tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
-  if (v === "board") { dot("board", false); loadBoard(); }
-  if (v === "record") { dot("record", false); if (!gmOn) { gmOn = true; store.set("gm", true); renderGm(true); renderHud(); } renderRecord(); }
+  document.querySelectorAll(".nav button, .side-tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
+  if (v === "board") loadBoard();
   // the content under the viewport changes completely, so jump rather than animate the scroll
   if (!wide.matches) window.scrollTo(0, 0);
 }
@@ -993,179 +703,34 @@ wide.onchange = () => { if (wide.matches && view === "play") setView("hymnal"); 
 $("seeBoardBtn").onclick = () => setView("board");
 
 /* ---------- HUD ---------- */
-const LAMP_SVG = `<svg viewBox="0 0 14 20"><path class="flame" d="M7 1C8.6 4 10 5.6 10 7.6A3 3 0 0 1 4 7.6C4 5.6 5.4 4 7 1Z" fill="var(--gold)"/><path d="M2 12h10l-1.5 6h-7Z" fill="var(--muted)"/><rect x="5.5" y="10" width="3" height="2" fill="var(--muted)"/></svg>`;
+const LAMP_SVG = `<svg viewBox="0 0 14 20" aria-hidden="true"><path d="M7 1C8.6 4 10 5.6 10 7.6A3 3 0 0 1 4 7.6C4 5.6 5.4 4 7 1Z" fill="var(--gold)"/><path d="M2 12h10l-1.5 6h-7Z" fill="var(--muted)"/><rect x="5.5" y="10" width="3" height="2" fill="var(--muted)"/></svg>`;
 $("lamps").innerHTML = Array.from({ length: LIVES }, () => `<span class="lamp">${LAMP_SVG}</span>`).join("");
-$("combo").innerHTML = "<i></i>".repeat(10);
-let shown = { score: 0, lives: LIVES };
-function bump(el) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
-function countTo(el, from, to) {
-  const t0 = performance.now(), d = 700;
-  const step = now => {
-    const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3);
-    el.textContent = Math.round(from + (to - from) * e).toLocaleString();
-    if (k < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
-function levelOf(xp) {
-  let i = 0; while (i + 1 < LEVELS.length && xp >= LEVELS[i + 1][2]) i++;
-  const next = LEVELS[i + 1];
-  return { i, num: LEVELS[i][0], name: LEVELS[i][1], next, frac: next ? (xp - LEVELS[i][2]) / (next[2] - LEVELS[i][2]) : 1 };
-}
 function renderHud() {
-  const score = run ? run.score : 0;
-  if (score !== shown.score) { countTo($("hScore"), shown.score, score); bump($("hScore")); shown.score = score; }
-  else $("hScore").textContent = score.toLocaleString();
-  const streak = run ? run.streak : 0;
-  if (+$("hStreak").textContent !== streak && streak) bump($("hStreak"));
+  const score = run ? run.score : 0, streak = run ? run.streak : 0;
+  const inSet = !!(run && run.mode === "set");
+  $("hScore").textContent = score.toLocaleString();
   $("hStreak").textContent = streak;
   const bonus = Math.min(streak, 10) * 10;
-  $("hBonus").textContent = bonus ? `+${bonus}%` : "";
-  [...$("combo").children].forEach((i, k) => { i.classList.toggle("on", k < streak); i.classList.toggle("max", streak >= 10); });
-  // chase: how far to your best, or past it
+  $("hBonus").textContent = bonus ? `+${bonus}% points` : "";
   const rivals = chalInfo && chalInfo.results ? chalInfo.results.length : 0;
-  $("hChase").textContent = (run && run.mode === "set") || (!run && chal) ? (rivals ? `${rivals} to beat` : "Set the bar") :
-    !run || !score || run.state === "over" ? `Best ${best.toLocaleString()}` :
-    score >= best ? "New best!" : `${(best - score + 1).toLocaleString()} to best`;
-  const inSet = run && run.mode === "set";
+  $("hChase").textContent = inSet && run.state === "over" ? "Final" : inSet || (!run && chal) ? (rivals ? `${rivals} to beat` : "Set the bar") :
+    run && score && run.state !== "over" && score >= best ? "New best" : `Best ${best.toLocaleString()}`;
   $("wrap").dataset.chal = chal || inSet ? "1" : "";
-  $("cellLamps").hidden = !!inSet; $("cellSongs").hidden = !inSet && !chal;
-  if (inSet) { $("hSongs").textContent = `${Math.min(run.round, run.poolSize)}/${run.poolSize}`; $("hSongsHint").textContent = run.state === "over" ? "finished" : run.round < run.poolSize ? `${run.poolSize - run.round} to go` : "last song"; }
-  else if (chal) { $("hSongs").textContent = chalInfo ? `0/${chalInfo.size}` : "–"; $("hSongsHint").textContent = "challenge"; }
+  $("cellLamps").hidden = inSet || !!chal; $("cellSongs").hidden = !inSet && !chal;
+  if (inSet) { $("hSongs").textContent = `${Math.min(run.round, run.poolSize)}/${run.poolSize}`; $("hSongsHint").textContent = run.state === "over" ? "Finished" : run.round < run.poolSize ? `${run.poolSize - run.round} to go` : "Last song"; }
+  else if (chal) { $("hSongs").textContent = chalInfo ? `0/${chalInfo.size}` : "–"; $("hSongsHint").textContent = "Challenge"; }
   const lives = run && !inSet ? run.lives : LIVES;
   [...$("lamps").children].forEach((l, i) => {
     const out = i >= lives;
-    if (out && !l.classList.contains("out")) { l.classList.add("dying"); setTimeout(() => l.classList.remove("dying"), 800); }
-    if (!out && l.classList.contains("out")) { l.classList.add("relit"); setTimeout(() => l.classList.remove("relit"), 900); }
+    if (out && !l.classList.contains("out")) { l.classList.add("dying"); setTimeout(() => l.classList.remove("dying"), 700); }
+    if (!out && l.classList.contains("out")) { l.classList.add("relit"); setTimeout(() => l.classList.remove("relit"), 700); }
     l.classList.toggle("out", out);
   });
-  $("hLampHint").textContent = !run || run.state === "over" ? `${lives} lit` : lives === 1 ? "last one!" :
-    streak && lives < LIVES ? `relight at ${Math.ceil((streak + 1) / 5) * 5}` : `${lives} lit`;
-  shown.lives = lives;
-  const lv = levelOf(prof.xp);
-  $("hLevel").textContent = lv.num; $("hLevelName").textContent = lv.name;
-  $("hXp").style.width = (lv.frac * 100) + "%";
+  $("hLampHint").textContent = !run || run.state === "over" ? `${lives} lit` : lives === 1 ? "Last one" :
+    streak && lives < LIVES ? `Relight at ${Math.ceil((streak + 1) / 5) * 5}` : `${lives} lit`;
 }
 
-/* ---------- effects ---------- */
-function floatText(text, anchor, color) {
-  const box = $("game").getBoundingClientRect(), a = anchor.getBoundingClientRect();
-  const f = document.createElement("div");
-  f.className = "float"; f.textContent = text;
-  if (color) f.style.color = color;
-  f.style.left = (a.left + a.width / 2 - box.left) + "px";
-  f.style.top = (a.top - box.top - 10) + "px";
-  $("game").appendChild(f);
-  setTimeout(() => f.remove(), 1500);
-}
-function sparks(anchor, n = 28) {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const a = anchor.getBoundingClientRect();
-  const cx = a.left + a.width / 2, cy = a.top + a.height / 2;
-  const cs = getComputedStyle(document.documentElement);
-  const colors = [cs.getPropertyValue("--gold"), cs.getPropertyValue("--good"), cs.getPropertyValue("--rubric")];
-  for (let i = 0; i < n; i++) {
-    const s = document.createElement("div");
-    s.className = "spark";
-    s.style.background = colors[i % 3];
-    s.style.left = cx + "px"; s.style.top = cy + "px";
-    document.body.appendChild(s);
-    const ang = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 140;
-    s.animate([
-      { transform: "translate(-50%,-50%) rotate(0)", opacity: 1 },
-      { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 60}px) rotate(${Math.random() * 540}deg)`, opacity: 0 }
-    ], { duration: 900 + Math.random() * 500, easing: "cubic-bezier(.2,.7,.4,1)" }).onfinish = () => s.remove();
-  }
-}
-function flash(cls) { const g = $("game"); g.classList.remove(cls); void g.offsetWidth; g.classList.add(cls); }
-function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch {} }
-
-/* ---------- offices (daily quests), badges, record ---------- */
-function seeded(seed) { let h = 2166136261; for (const c of seed) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }; }
-function ensureDaily() {
-  const d = today();
-  if (daily && daily.date === d) return daily;
-  const rnd = seeded("office:" + d), pool = [...OFFICES], set = [];
-  while (set.length < 3 && pool.length) set.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0].id);
-  daily = { date: d, ids: set, prog: {}, done: [] };
-  store.set("daily", daily);
-  return daily;
-}
-function officeProgress(o) {
-  const p = daily.prog;
-  return Math.min(o.n, p[o.k] || 0);
-}
-// Feed an event into today's offices. Counters: correct, fast, stage0, runs, inscribed accumulate; streak, run take the max.
-function officeEvent(k, v = 1) {
-  ensureDaily();
-  const p = daily.prog;
-  p[k] = k === "streak" || k === "run" ? Math.max(p[k] || 0, v) : (p[k] || 0) + v;
-  let gained = 0;
-  for (const id of daily.ids) {
-    const o = OFFICES.find(x => x.id === id);
-    if (daily.done.includes(id) || officeProgress(o) < o.n) continue;
-    daily.done.push(id); gained += o.xp;
-    if (gmOn) setTimeout(() => { toast("✓", `Office kept: ${o.t}`, `+${o.xp} XP`, "good"); sfx("badge"); }, 700);
-    if (daily.done.length === 3) { if (gmOn) setTimeout(() => toast("✠", "All three offices kept today", "+100 XP", "good", 4000), 1600); gained += 100; }
-  }
-  store.set("daily", daily);
-  if (gained) addXp(gained);
-  renderQuests(true);
-}
-function renderQuests(pulse) {
-  ensureDaily();
-  const html = daily.ids.map(id => {
-    const o = OFFICES.find(x => x.id === id), n = officeProgress(o), done = daily.done.includes(id);
-    const mark = done ? "✓" : o.n >= 100 ? `${Math.round(n / o.n * 100)}%` : `${n}/${o.n}`;
-    return `<div class="quest${done ? " done" : ""}" data-q="${id}"><span class="q"><i style="transform:scaleY(${n / o.n})"></i><b>${mark}</b></span>` +
-      `<span class="qt">${esc(o.t)}${o.d ? `<small>${esc(o.d)}</small>` : ""}</span><span class="qr">${done ? "kept" : `+${o.xp} XP`}</span></div>`;
-  }).join("");
-  $("quests").innerHTML = html; $("quests2").innerHTML = html;
-  const left = 3 - daily.done.length;
-  $("questDay").textContent = $("questDay2").textContent = left ? `${left} left today` : "all kept";
-  if (pulse) for (const id of daily.done) document.querySelectorAll(`[data-q="${id}"]`).forEach(el => { if (!el.dataset.shown) { el.classList.add("just"); el.dataset.shown = 1; } });
-}
-function saveProf() { prof.days = prof.dayList.length; store.set("prof", prof); }
-function addXp(n) {
-  const before = levelOf(prof.xp);
-  prof.xp += n; saveProf();
-  const after = levelOf(prof.xp);
-  if (after.i > before.i) setTimeout(() => { if (gmOn) { toast(after.num, `Rank ${after.num}: ${after.name}`, "New rank", "", 4200); sfx("fanfare"); sparks($("hLevel"), 30); } dot("record", true); }, 1200);
-  renderHud();
-}
-function checkBadges() {
-  const fresh = BADGES.filter(b => !prof.badges.includes(b.id) && b.t(prof));
-  fresh.forEach((b, i) => {
-    prof.badges.push(b.id);
-    setTimeout(() => { if (gmOn) { toast(b.g, `Badge: ${b.n}`, "+50 XP", "fire", 3600); sfx("badge"); } dot("record", true); }, 1500 + i * 900);
-  });
-  if (fresh.length) { prof.newBadges = fresh.map(b => b.id); addXp(fresh.length * 50); saveProf(); }
-}
-function markDay() { const d = today(); if (!prof.dayList.includes(d)) { prof.dayList.push(d); saveProf(); } }
-function renderRecord() {
-  const lv = levelOf(prof.xp);
-  $("lvSigil").textContent = lv.num; $("lvName").textContent = lv.name;
-  $("lvXp").textContent = `${prof.xp.toLocaleString()} XP`;
-  $("lvNext").textContent = lv.next ? `${(lv.next[2] - prof.xp).toLocaleString()} to ${lv.next[1]}` : "Highest rank";
-  $("lvMeter").style.width = (lv.frac * 100) + "%";
-  $("recDays").textContent = prof.days ? `${prof.days} day${prof.days === 1 ? "" : "s"} played` : "";
-  const acc = prof.songs ? Math.round(prof.correct / prof.songs * 100) : 0;
-  $("stats").innerHTML = [
-    ["Best run", best.toLocaleString()], ["Songs named", prof.correct.toLocaleString()], ["Accuracy", `${acc}<small>%</small>`],
-    ["Best streak", prof.bestStreak], ["From ½ second", prof.stage0], ["Runs", prof.runs]
-  ].map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("");
-  const fresh = prof.newBadges || [];
-  $("badges").innerHTML = BADGES.map(b => {
-    const has = prof.badges.includes(b.id);
-    return `<div class="badge${has ? "" : " locked"}${fresh.includes(b.id) ? " new" : ""}" tabindex="0"><span class="g">${b.g}</span><span class="n">${esc(b.n)}</span><span class="tip">${esc(b.d)}${has ? "" : " (locked)"}</span></div>`;
-  }).join("");
-  $("badgeCount").textContent = `${prof.badges.length} / ${BADGES.length}`;
-  if (fresh.length) { prof.newBadges = []; saveProf(); }
-  renderQuests();
-}
-$("badges").onclick = e => { const b = e.target.closest(".badge"); if (!b) return; document.querySelectorAll(".badge.open").forEach(x => x !== b && x.classList.remove("open")); b.classList.toggle("open"); };
-
-/* ---------- settings UI ---------- */
+/* ---------- hymnal settings ---------- */
 function renderChips() {
   const el = $("chips");
   el.innerHTML = "";
@@ -1175,11 +740,11 @@ function renderChips() {
     b.setAttribute("aria-pressed", a.on);
     const n = poolCounts[a.name];
     b.innerHTML = esc(a.name) + (a.on && n !== undefined ? ` <span class="ct">${n}</span>` : "");
-    b.onclick = () => { a.on = !a.on; sfx("tick"); saveSettings(); renderChips(); };
+    b.onclick = () => { a.on = !a.on; saveSettings(); renderChips(); };
     el.appendChild(b);
   });
   const n = artists.filter(a => a.on).length;
-  $("selCount").textContent = `${n} artist${n === 1 ? "" : "s"}`;
+  $("selCount").textContent = `${n} artist${n === 1 ? "" : "s"} chosen`;
 }
 function renderYears() {
   const lo = +$("yMin").value, hi = +$("yMax").value;
@@ -1201,9 +766,9 @@ $("yMin").oninput = () => { if (+$("yMin").value > +$("yMax").value) $("yMin").v
 $("yMax").oninput = () => { if (+$("yMax").value < +$("yMin").value) $("yMax").value = $("yMin").value; years = [+$("yMin").value, +$("yMax").value]; renderYears(); saveSettings(); };
 $("pop").oninput = () => { popIdx = +$("pop").value; renderPop(); saveSettings(); };
 document.querySelectorAll(".presets button").forEach(b => b.onclick = () => {
-  const [lo, hi] = b.dataset.y.split("-").map(Number);
-  $("yMin").value = lo; $("yMax").value = Math.min(hi, THIS_YEAR);
-  years = [lo, Math.min(hi, THIS_YEAR)]; renderYears(); saveSettings();
+  const [lo, hi] = b.dataset.y.split("-").map(y => y === "now" ? THIS_YEAR : Math.min(+y, THIS_YEAR));
+  $("yMin").value = lo; $("yMax").value = hi;
+  years = [lo, hi]; renderYears(); saveSettings();
 });
 $("allBtn").onclick = () => { artists.forEach(a => a.on = true); saveSettings(); renderChips(); };
 $("noneBtn").onclick = () => { artists.forEach(a => a.on = false); saveSettings(); renderChips(); };
@@ -1260,7 +825,7 @@ function teachOne(name) {
 async function teach(names) {
   const todo = [...new Set(names)], total = todo.length;
   let done = 0;
-  const tick = () => $("poolInfo").textContent = `Loading artists… ${done}/${total}`;
+  const tick = () => $("poolInfo").textContent = `Loading artists… ${done} of ${total}`;
   tick();
   await Promise.all(Array.from({ length: 4 }, async () => {
     while (todo.length) { await teachOne(todo.shift()); done++; tick(); }
@@ -1272,31 +837,27 @@ function showPool(p) {
   poolCounts = p.counts; renderChips(); renderDiscover();
   const missing = p.missing.filter(n => failedArtists.has(n));
   const loading = p.missing.filter(n => !failedArtists.has(n));
-  $("poolInfo").textContent = `${p.size} songs · ${POP_STEPS[popIdx].short} · ${years[0]}–${years[1]}` +
-    (loading.length ? ` · loading ${loading.length} more artist${loading.length > 1 ? "s" : ""}…` : "") +
-    (missing.length ? ` · no songs found for ${missing.join(", ")}` : "");
-  $("multTag").textContent = p.mult ? "×" + p.mult.toFixed(2) : "Practice";
-  $("multTag").classList.toggle("off", !p.mult);
-  $("multMeter").style.width = (p.mult / 2 * 100) + "%";
-  $("multHint").textContent = p.mult ? "Bigger, more varied pools score higher" : `Under ${p.minRanked} songs: practice only, not ranked`;
+  $("poolInfo").textContent = `${p.size.toLocaleString()} songs: ${POP_STEPS[popIdx].phrase}, ${yearSpan(years[0], years[1])}.` +
+    (loading.length ? ` Loading ${loading.length} more artist${loading.length > 1 ? "s" : ""}…` : "") +
+    (missing.length ? ` No songs found for ${missing.join(", ")}.` : "");
+  $("multHint").textContent = p.mult ? `Ranked, points ×${p.mult.toFixed(2)}. Bigger, more varied hymnals score higher.` :
+    `Practice only. Ranked games need at least ${p.minRanked} songs.`;
   renderMode();
 }
 function renderMode() {
-  const p = lastPool;
-  if (!p && !chal) { $("modeLine").textContent = "Counting songs…"; return; }
-  if (!p) { $("chalMode").textContent = chalInfo ? `${chalInfo.size} songs, easy to hard` : "Opening the challenge…"; $("chalStartBtn").disabled = !chalInfo; return; }
   if (chal) {
     $("chalStartBtn").disabled = !chalInfo;
-    $("chalMode").innerHTML = chalInfo ? `${chalInfo.size} songs, easy to hard · points <b>×${chalInfo.mult.toFixed(2)}</b>` : "Opening the challenge…";
+    $("chalMode").textContent = chalInfo ? `${chalInfo.size} songs, easy to hard. Points ×${chalInfo.mult.toFixed(2)}.` : "Opening the challenge…";
     return;
   }
+  const p = lastPool;
+  if (!p) { $("modeLine").textContent = "Counting songs…"; return; }
   const enough = mode === "set" ? p.size >= setSize : p.size > 0;
   $("startBtn").disabled = !enough;
-  $("modeLine").className = "mode" + (p.mult || mode === "set" ? "" : " practice");
-  $("modeLine").innerHTML = !p.size ? "No songs match. Adjust your hymnal." :
-    mode === "set" ? (enough ? `${setSize} of ${p.size} songs, easy to hard · points <b>×${p.mult.toFixed(2)}</b>` : `<b>Only ${p.size} songs</b> · a set of ${setSize} needs more. Widen your hymnal.`) :
-    p.mult ? `Ranked run · ${p.size} songs · points <b>×${p.mult.toFixed(2)}</b>` :
-    `<b>Practice</b> · ${p.size} songs · add more for a ranked run`;
+  $("modeLine").textContent = !p.size ? "No songs match. Adjust your hymnal." :
+    mode === "set" ? (enough ? `${setSize} of ${p.size.toLocaleString()} songs, easy to hard. Points ×${p.mult.toFixed(2)}.` : `Only ${p.size} songs match. A set of ${setSize} needs more; widen your hymnal.`) :
+    p.mult ? `Ranked: ${p.size.toLocaleString()} songs, points ×${p.mult.toFixed(2)}.` :
+    `Practice: ${p.size} songs. Add artists for a ranked game.`;
 }
 
 /* artist search */
@@ -1324,7 +885,7 @@ async function searchArtists(q) {
     if (!res.length) { list.innerHTML = `<li class="none">No artists found for “${esc(q)}”</li>`; list.hidden = false; return; }
     list.innerHTML = res.map(r => {
       const have = artists.some(a => a.name.toLowerCase() === r.artistName.toLowerCase() && a.on);
-      return `<li data-name="${esc(r.artistName)}">${esc(r.artistName)}<small>${have ? "✓ added" : esc(r.primaryGenreName || "")}</small></li>`;
+      return `<li data-name="${esc(r.artistName)}">${esc(r.artistName)}<small>${have ? "In your hymnal" : esc(r.primaryGenreName || "")}</small></li>`;
     }).join("");
     list.hidden = false;
   } catch {
@@ -1391,18 +952,17 @@ $("shuffleBtn").onclick = () => { discoverOffset += 10; renderDiscover(); };
 
 /* ---------- game ---------- */
 const audio = $("audio");
-let stopTimer = null, raf = null, clipUrl = null, listens = 0;
-$("eq").innerHTML = "<i></i>".repeat(10);
+let stopTimer = null, raf = null, clipUrl = null;
 
 // transient: a player-facing hint that playback may clear (feedback lines stay until the next action)
 function status(msg, err, transient) { const s = $("status"); s.textContent = msg; s.className = "status" + (err ? " err" : ""); s.dataset.t = transient ? "1" : ""; }
 function showPanel(which) {
-  if (which === "intro") { $("gameTitle").textContent = chal ? "Challenge" : "Listen"; $("roundTag").textContent = ""; }
+  if (which === "intro") { $("gameTitle").textContent = "Listen"; $("roundTag").textContent = ""; }
+  $("gameHead").hidden = which === "intro" && !!chal;
   $("intro").hidden = which !== "intro";
   $("play").hidden = which !== "play";
   $("over").hidden = which !== "over";
 }
-function newTally(id) { tally = { id, songs: [], miss: 0 }; store.set("tally", tally); }
 
 async function startRun() {
   if (busy) return;
@@ -1420,10 +980,8 @@ async function startRun() {
     else r = await api("/runs", settings());
     titles = r.titles; if (Object.keys(r.counts || {}).length) poolCounts = r.counts;
     delete r.titles; delete r.counts;
-    run = r; shown.score = 0;
+    run = r;
     store.set("run", run.id); store.set("runSet", r.mode === "set" ? r.setId : null);
-    newTally(run.id);
-    markDay();
     renderChips(); renderDiscover();
     status("");
     if (!wide.matches) setView("play");
@@ -1439,21 +997,20 @@ $("startBtn").onclick = startRun;
 $("chalStartBtn").onclick = startRun;
 $("homeLink").onclick = e => {
   e.preventDefault();
-  if (run && run.state !== "over" && run.round > 0 && !confirm("Go home? Your current run and its score will end.")) return;
+  if (run && run.state !== "over" && run.round > 0 && !confirm("Go home? Your current game and its score will end.")) return;
   goHome();
 };
 function goHome() {
   stopAudio();
   chal = null; chalInfo = null; run = null; store.set("run", null); store.set("runSet", null);
   if (location.hash) history.replaceState(null, "", location.pathname + location.search);
-  $("chalIntro").hidden = true; $("cellSongs").hidden = true; $("cellLamps").hidden = false;
-  shown.score = 0; $("hScore").textContent = "0";
+  $("chalIntro").hidden = true;
   showPanel("intro"); status(""); renderModes(); renderHud();
   setView(wide.matches ? "hymnal" : "play");
   window.scrollTo(0, 0);
 }
 $("applyBtn").onclick = () => {
-  if (run && run.state !== "over" && run.round > 1 && !confirm("Deal new songs? Your current run and its score will end.")) return;
+  if (run && run.state !== "over" && run.round > 1 && !confirm("Start a new game with this hymnal? Your current game and its score will end.")) return;
   if (chal) leaveChallenge();
   startRun();
 };
@@ -1466,16 +1023,15 @@ $("useHymBtn").onclick = () => {
   for (const n of st.artists) if (!artists.some(a => a.name.toLowerCase() === n.toLowerCase())) artists.push({ name: n, on: true });
   years = [Math.max(1965, +st.years[0] || 1965), Math.min(THIS_YEAR, +st.years[1] || THIS_YEAR)]; popIdx = POP_STEPS[st.pop] ? st.pop : DEFAULT_POP;
   $("yMin").value = years[0]; $("yMax").value = years[1];
-  renderYears(); renderPop(); renderChips(); renderDiscover(); saveSettings(); sfx("tick");
-  const b = $("useHymBtn"); b.textContent = "Copied to your hymnal ✓"; b.disabled = true;
-  setTimeout(() => { b.textContent = "Copy this hymnal to my settings"; b.disabled = false; }, 2500);
-  toast("℟", "Your hymnal now matches this challenge", `${st.artists.length} artists · ${years[0]}–${years[1]}`, "good");
+  renderYears(); renderPop(); renderChips(); renderDiscover(); saveSettings();
+  const b = $("useHymBtn"); b.textContent = "Added to your hymnal"; b.disabled = true;
+  setTimeout(() => { b.textContent = "Use these artists in my hymnal"; b.disabled = false; }, 2500);
 };
 function leaveChallenge() {
   chal = null; chalInfo = null; run = null; store.set("run", null);
   if (location.hash) history.replaceState(null, "", location.pathname + location.search);
-  $("chalIntro").hidden = true; $("cellSongs").hidden = true; $("cellLamps").hidden = false;
-  stopAudio(); showPanel("intro"); renderModes(); renderHud(); shown.score = 0; $("hScore").textContent = "0";
+  $("chalIntro").hidden = true;
+  stopAudio(); showPanel("intro"); renderModes(); renderHud();
   if (!wide.matches) setView("play");
 }
 
@@ -1485,46 +1041,40 @@ function enterRound() {
   $("guess").value = ""; hideSugg();
   $("gameTitle").textContent = "Listen";
   status("");
-  listens = 0;
   renderRound();
   loadClip(true);
   setTimeout(() => $("guess").focus({ preventScroll: true }), 50);
 }
 function stagePts(r, i) { return r.ranked ? Math.round(STAGE_PTS[i] * (1 + 0.1 * Math.min(r.streak, 10)) * r.mult) : STAGE_PTS[i]; }
 
+// The six clips are one strip: each cell shows its points, then its result, and fills as that stretch of audio plays.
 function renderRound() {
-  const r = run;
-  $("roundTag").textContent = `Song ${r.round} of ${r.poolSize}` + (r.mode === "set" ? " · challenge" : r.ranked ? ` · ×${r.mult.toFixed(2)}` : " · practice");
-  const reveal = r.state !== "play";
+  const r = run, reveal = r.state !== "play";
+  $("roundTag").textContent = `Song ${r.round} of ${r.poolSize.toLocaleString()}` + (r.mode === "set" ? "" : r.ranked ? `, ranked ×${r.mult.toFixed(2)}` : ", practice");
   $("slots").innerHTML = CLIPS.map((c, i) => {
     const g = r.guesses[i];
-    let cls = "slot";
-    if (g) cls += g.type === "right" ? " right" : g.type === "skip" ? " skipped" : " wrong";
-    else if (i === r.stage && !reveal) cls += " now";
-    else if (i > r.stage) cls += " later";
-    const pts = stagePts(r, i);
-    const mark = !g ? pts.toLocaleString() : g.type === "right" ? "✓" : g.type === "skip" ? "skip" : "✕";
-    return `<div class="${cls}"><span class="t">${c}s</span><span class="pts">${mark}</span></div>`;
+    const cls = g ? (g.type === "right" ? "right" : g.type === "skip" ? "skip" : "wrong") : i === r.stage && !reveal ? "now" : i > r.stage && !reveal ? "later" : "";
+    const note = g ? (g.type === "right" ? "✓" : g.type === "skip" ? "skip" : "✕") : reveal ? "&nbsp;" : stagePts(r, i).toLocaleString();
+    return `<li class="slot ${cls}"><i class="fill"></i><span class="t">${c}<small>s</small></span><span class="pts">${note}</span></li>`;
   }).join("");
   $("log").innerHTML = r.guesses.map((g, i) => g.type === "wrong" ?
-    `<div><span class="n">${CLIPS[i]}s</span><span class="x">✕ ${esc(g.text)}</span></div>` : "").join("");
-  const len = reveal ? MAX : CLIPS[r.stage];
-  $("unlocked").style.width = (len / MAX * 100) + "%";
-  $("clipLen").textContent = reveal ? "Full clip" : `${len}s unlocked`;
-  $("track").querySelectorAll(".tick").forEach(t => t.remove());
-  CLIPS.slice(0, -1).forEach(c => { const t = document.createElement("div"); t.className = "tick"; t.style.left = (c / MAX * 100) + "%"; $("track").appendChild(t); });
+    `<li><span class="n">${CLIPS[i]}s</span><s>${esc(g.text)}</s></li>` : "").join("");
   $("skipBtn").innerHTML = r.stage < CLIPS.length - 1 ? `Skip +${CLIPS[r.stage + 1] - CLIPS[r.stage]}s <span class="kbd">⇧⏎</span>` : `${r.mode === "set" ? "Pass" : "Give up"} <span class="kbd">⇧⏎</span>`;
-  // stakes
-  if (!reveal) {
-    const w = $("worth"), now = stagePts(r, r.stage);
-    if (w.textContent !== now.toLocaleString()) { w.classList.remove("decay"); void w.offsetWidth; w.classList.add("decay"); }
-    w.textContent = now.toLocaleString();
-    const next = r.stage < CLIPS.length - 1 ? stagePts(r, r.stage + 1) : 0;
-    const lastLamp = r.mode !== "set" && r.lives === 1;
-    $("fireTag").textContent = r.streak >= 3 ? `🔥 +${Math.min(r.streak, 10) * 10}% streak` :
-      lastLamp ? "Last lamp. Choose wisely." : next ? `skip → ${next.toLocaleString()}` : "Last chance";
-    $("fireTag").style.color = lastLamp && r.streak < 3 ? "var(--rubric)" : "";
-  }
+  $("worthLine").hidden = reveal;
+  $("fireTag").classList.remove("warn");
+  if (reveal) { $("fireTag").textContent = "Play the full preview."; return; }
+  $("worth").textContent = stagePts(r, r.stage).toLocaleString();
+  const next = r.stage < CLIPS.length - 1 ? stagePts(r, r.stage + 1) : 0;
+  const lastLamp = r.mode !== "set" && r.lives === 1;
+  $("fireTag").textContent = lastLamp ? "Your last lamp is lit." : r.streak >= 3 ? `Includes +${Math.min(r.streak, 10) * 10}% for your streak.` :
+    next ? `A skip drops it to ${next.toLocaleString()}.` : "Last chance.";
+  $("fireTag").classList.toggle("warn", lastLamp);
+}
+function paintProgress(t) {
+  [...$("slots").children].forEach((li, i) => {
+    const a = i ? CLIPS[i - 1] : 0, b = CLIPS[i];
+    li.querySelector(".fill").style.transform = `scaleX(${Math.max(0, Math.min(1, (t - a) / (b - a)))})`;
+  });
 }
 
 async function loadClip(autoplay) {
@@ -1544,42 +1094,26 @@ async function loadClip(autoplay) {
     if (autoplay) playFor(clipSeconds());
   } catch {
     $("playBtn").disabled = false;
-    status("Couldn't load that clip. Press play to retry.", true, true);
+    status("Couldn't load that clip. Press play to try again.", true, true);
     audio.dataset.clip = "";
   }
 }
 function clipSeconds() { return run.state === "play" ? CLIPS[run.stage] : 30; }
 
-let actx = null, analyser = null;
-function setupAnalyser() {
-  if (analyser || !window.AudioContext) return;
-  try {
-    actx = new AudioContext();
-    const src = actx.createMediaElementSource(audio);
-    analyser = actx.createAnalyser(); analyser.fftSize = 64;
-    src.connect(analyser); analyser.connect(actx.destination);
-  } catch { analyser = null; }
-}
 function stopAudio() {
   audio.pause(); clearTimeout(stopTimer); cancelAnimationFrame(raf);
-  $("prog").style.width = "0"; $("playBtn").classList.remove("playing");
-  [...$("eq").children].forEach(b => b.style.height = "3px");
+  paintProgress(0); $("playBtn").classList.remove("playing");
 }
 function playFor(seconds) {
   stopAudio();
-  setupAnalyser();
-  if (actx && actx.state === "suspended") actx.resume();
   audio.currentTime = 0;
-  const bins = new Uint8Array(32), bars = [...$("eq").children];
   const go = () => audio.play().then(() => {
     if ($("status").dataset.t) status("");
     $("playBtn").classList.add("playing"); $("playBtn").classList.remove("done");
-    if (run && run.state === "play") { listens++; prof.listens++; }
     const t0 = performance.now();
     const tick = () => {
       const el = Math.min((performance.now() - t0) / 1000, seconds);
-      $("prog").style.width = (el / MAX * 100) + "%";
-      if (analyser) { analyser.getByteFrequencyData(bins); bars.forEach((b, i) => b.style.height = (3 + bins[i * 2 + 1] / 255 * 15) + "px"); }
+      paintProgress(el);
       if (el < seconds && !audio.paused) raf = requestAnimationFrame(tick);
     };
     tick();
@@ -1590,7 +1124,6 @@ function playFor(seconds) {
 }
 audio.onended = () => { stopAudio(); $("playBtn").classList.add("done"); };
 $("playBtn").onclick = () => { if (!run) return; if (audio.dataset.clip) playFor(clipSeconds()); else loadClip(true); };
-$("fullBtn").onclick = () => playFor(30);
 $("nextBtn").onclick = async () => {
   if (busy || !run) return;
   if (run.state === "over") return showOver();
@@ -1614,23 +1147,14 @@ async function act(kind, text) {
   } finally { busy = false; }
 }
 function afterAct(before, r) {
-  const slot = $("slots").children[before.stage];
-  if (r.result === "right") {
-    flash("glory"); sparks(slot); sfx("right"); buzz([30, 40, 30]); status("");
-    floatText("+" + r.points.toLocaleString(), slot);
-    const milestone = V.streak[r.streak];
-    if (milestone) setTimeout(() => { floatText(`${milestone}!`, $("playBtn"), "var(--flame)"); toast("🔥", `${milestone}: streak of ${r.streak}`, `Every guess now worth +${Math.min(r.streak, 10) * 10}%`, "fire"); }, 500);
-  } else if (r.result === "wrong") {
-    flash("shake"); sfx("wrong"); buzz(80);
-    status(pick(V.wrong), true);
-  } else {
-    sfx("skip");
-    status(pick(V.skip));
-  }
-  if (r.lamp === "refilled") setTimeout(() => { floatText("🪔 " + V.lampBack, $("playBtn"), "var(--gold)"); sfx("relit"); }, 900);
-  if (r.lamp === "out") { status(pick(V.lampOut), true); sfx("lamp"); buzz([60, 60, 120]); }
-  if (r.state === "play") { renderRound(); loadClip(true); }
-  else showReveal(before);
+  if (r.result === "right") { sfx("right"); buzz([30, 40, 30]); }
+  else if (r.result === "wrong") { sfx("wrong"); buzz(80); }
+  if (r.lamp === "refilled") setTimeout(() => sfx("relit"), 500);
+  if (r.lamp === "out") { sfx("lamp"); buzz([60, 60, 120]); }
+  if (r.state === "play") {
+    status(r.result === "wrong" ? pick(V.wrong) : pick(V.skip), r.result === "wrong");
+    renderRound(); loadClip(true);
+  } else { status(""); showReveal(before); }
   renderHud();
 }
 
@@ -1640,126 +1164,87 @@ function showReveal(before) {
   renderRound();
   $("guessRow").hidden = true;
   $("gameTitle").textContent = l.won ? "Hallelujah" : "Selah";
-  $("rvVerdict").textContent = l.won ? `Named in ${CLIPS[l.stage]}s` : `Not this time`;
+  $("rvVerdict").textContent = l.won ? `Named in ${CLIPS[l.stage]}s` : "Not this time";
   $("rvVerdict").className = "verdict " + (l.won ? "win" : "lose");
   $("rvTitle").textContent = s.title;
-  $("rvMeta").textContent = `${s.artist} · ${s.album} · ${s.year} · #${s.rank} most popular`;
+  $("rvMeta").textContent = `${s.artist}${s.album ? `, from ${s.album}` : ""}${s.year ? ` (${s.year})` : ""}. ` +
+    (s.rank === 1 ? "Their most popular song." : `Their ${ordinal(s.rank)} most popular song.`);
   $("rvVerse").innerHTML = verseHTML(l.won ? pick(V.win[l.stage]) : pick(V.lose));
-  $("rvArt").src = s.art; $("rvArt").alt = s.album + " cover";
+  $("rvArt").src = s.art; $("rvArt").alt = s.album ? `${s.album} cover` : "";
   $("rvLink").href = s.link;
-  $("nextBtn").innerHTML = run.state === "over" ? "See your reckoning" : `Next song <span class="kbd">⏎</span>`;
-  // points breakdown
-  const pills = [];
-  if (l.won) {
+  $("nextBtn").innerHTML = run.state === "over" ? "See your results" : `Next song <span class="kbd">⏎</span>`;
+  // what the round was worth, in one line
+  let gain;
+  if (l.won && l.points) {
     const streakBefore = Math.min(before ? before.streak : Math.max(0, run.streak - 1), 10);
-    pills.push(["gold", `+${l.points.toLocaleString()} pts`]);
-    pills.push(["", `${STAGE_PTS[l.stage].toLocaleString()} base`]);
-    if (streakBefore) pills.push(["fire", `+${streakBefore * 10}% streak`]);
-    if (run.ranked && run.mult !== 1) pills.push(["", `×${run.mult.toFixed(2)} pool`]);
-    if (l.stage === 0) pills.push(["good", "Half-second"]);
-    if (s.rank > 25) pills.push(["good", "Deep cut"]);
-    if (listens > 3) pills.push(["", `${listens} listens`]);
-  } else {
-    pills.push(["", "Streak reset"]);
-    if (run.mode === "set") pills.push(["", `${run.poolSize - run.round} song${run.poolSize - run.round === 1 ? "" : "s"} left`]);
-    else pills.push([run.lives ? "" : "fire", run.lives ? `${run.lives} lamp${run.lives === 1 ? "" : "s"} left` : "Last lamp out"]);
-  }
-  $("rvGain").innerHTML = pills.map(([c, t], i) => `<span class="pill ${c}" style="animation-delay:${200 + i * 110}ms">${esc(t)}</span>`).join("");
+    const parts = [`${STAGE_PTS[l.stage].toLocaleString()} for ${CLIPS[l.stage]}s`];
+    if (streakBefore) parts.push(`+${streakBefore * 10}% streak`);
+    if (run.mult !== 1) parts.push(`×${run.mult.toFixed(2)} pool`);
+    gain = `<b>+${l.points.toLocaleString()} points</b> <span>${esc(parts.join(", "))}.</span>`;
+    if (run.lamp === "refilled") gain += ` <span>Five in a row relit a lamp.</span>`;
+  } else if (l.won) gain = `<span>Practice games don't score.</span>`;
+  else if (run.mode === "set") { const left = run.poolSize - run.round; gain = `<span>Streak reset. ${left ? `${left} song${left === 1 ? "" : "s"} left.` : "That was the last song."}</span>`; }
+  else gain = `<span>Streak reset. ${run.lives ? `A lamp went out; ${run.lives} left.` : "Your last lamp went out."}</span>`;
+  $("rvGain").innerHTML = gain;
   $("reveal").hidden = false;
-  // local record keeping, once per round
-  if (tally && tally.id === run.id && !tally.songs.some(x => x.r === run.round)) {
-    tally.songs.push({ r: run.round, w: l.won, st: l.stage });
-    if (!l.won) tally.miss++;
-    store.set("tally", tally);
-    prof.songs++;
-    if (l.won) {
-      prof.correct++; if (l.stage === 0) prof.stage0++; if (s.rank > 25) prof.deep++;
-      prof.bestStreak = Math.max(prof.bestStreak, run.streak);
-      addXp(Math.max(1, Math.round(l.points / 10)));
-      officeEvent("correct"); if (l.stage <= 1) officeEvent("fast"); if (l.stage === 0) officeEvent("stage0");
-      officeEvent("streak", run.streak);
-    }
-    if (run.lamp === "refilled") prof.relit++;
-    officeEvent("run", run.score);
-    if (run.mode !== "set") prof.bestScore = Math.max(prof.bestScore, run.score);
-    saveProf(); checkBadges();
-  }
   loadClip(true);
   $("nextBtn").focus({ preventScroll: true });
 }
+const stripCells = d => d.map(x => `<i class="${x.w ? "w" + (x.s === 0 ? " h" : "") : "l"}">${x.w ? CLIPS[x.s] < 1 ? "½" : CLIPS[x.s] : "✕"}</i>`).join("");
 function showOver() {
   stopAudio();
-  // a finished challenge stays put so reopening its link shows the reckoning; survival runs clear
+  // a finished challenge stays put so reopening its link shows the results; survival games clear
   if (run.mode !== "set") store.set("run", null);
   showPanel("over");
   status("");
-  $("gameTitle").textContent = "The reckoning";
-  const tier = V.over.filter(t => run.score >= t[0]).at(-1);
-  $("overTitle").textContent = run.mode === "set" ? `${run.correct} of ${run.poolSize} named` : tier[1];
-  $("overVerse").innerHTML = verseHTML(tier[2]);
-  countTo($("overScore"), 0, run.score);
-  $("oCorrect").textContent = run.correct; $("oStreak").textContent = run.bestStreak;
-  $("oPool").textContent = run.poolSize; $("oMult").textContent = run.mult ? run.mult.toFixed(2) : "0";
-  const songs = tally && tally.id === run.id ? tally.songs : [];
-  $("strip").innerHTML = songs.map((x, i) => `<i class="${x.w ? "w" + (x.st === 0 ? " h" : "") : "l"}" style="animation-delay:${i * 40}ms" title="Song ${x.r}: ${x.w ? "named in " + CLIPS[x.st] + "s" : "missed"}">${x.w ? CLIPS[x.st] < 1 ? "½" : CLIPS[x.st] : "✕"}</i>`).join("");
   const inSet = run.mode === "set";
-  $("share").hidden = true; $("compare").hidden = true; $("songsBox").hidden = true; $("newSetBtn").hidden = !inSet; $("seeBoardBtn").hidden = inSet;
-  if (inSet) $("gameTitle").textContent = "The challenge";
+  const tier = V.over.filter(t => run.score >= t[0]).at(-1);
+  $("gameTitle").textContent = inSet ? `${run.correct} of ${run.poolSize} named` : tier[1];
+  $("roundTag").textContent = inSet ? "Challenge" : run.ranked ? `Ranked ×${run.mult.toFixed(2)}` : "Practice";
+  $("overVerse").innerHTML = verseHTML(tier[2]);
+  $("overScore").textContent = run.score.toLocaleString();
+  $("strip").innerHTML = stripCells(run.history || []);
+  $("overSum").textContent = inSet ? `Best streak ${run.bestStreak}. Points ×${run.mult.toFixed(2)}.` :
+    `${run.correct} named, best streak ${run.bestStreak}, from ${run.poolSize.toLocaleString()} songs` + (run.mult ? ` at ×${run.mult.toFixed(2)}.` : ".");
+  $("share").hidden = true; $("compare").hidden = true; $("songsBox").hidden = true;
+  $("newSetBtn").hidden = !inSet; $("seeBoardBtn").hidden = inSet;
   const canSubmit = inSet ? !run.submitted : run.ranked && run.score > 0 && !run.submitted;
+  $("againBtn").textContent = inSet ? "Back to start" : "Play again";
+  $("againBtn").className = "btn" + (inSet ? " ghost" : canSubmit ? "" : " primary");
   $("nameForm").hidden = !canSubmit;
-  $("nameForm").querySelector("button").textContent = inSet ? "Record & share" : "Inscribe";
-  $("nameInput").placeholder = inSet ? "Your name, so friends know who to beat" : "Your name for the Book of Life";
-  $("overStatus").textContent = inSet ? (run.submitted ? "" : "Add your name to record this and get the link.") :
-    !run.ranked ? "Practice runs aren't ranked. Choose more songs to compete." :
-    run.score <= 0 ? "No points this time. The last shall be first." : run.submitted ? "Already inscribed." : "";
+  $("nameForm").querySelector("button").textContent = inSet ? "Save and get the link" : "Add to leaderboard";
+  $("nameInput").placeholder = inSet ? "Your name, so friends know who to beat" : "Your name for the leaderboard";
+  $("overStatus").textContent = inSet ? (run.submitted ? "" : "Add your name to save your score and get the link.") :
+    !run.ranked ? "Practice games aren't ranked. Add more songs to your hymnal to compete." :
+    run.score <= 0 ? "No points this time. The last shall be first." : run.submitted ? "Already on the leaderboard." : "";
   $("nameInput").value = myName;
   if (canSubmit) setTimeout(() => $("nameInput").focus({ preventScroll: true }), 300);
   if (inSet) showSetResults();
-  // rewards, once per run
-  const rw = [];
-  if (tally && tally.id === run.id && !tally.closed) {
-    tally.closed = true; store.set("tally", tally);
-    prof.runs++; officeEvent("runs");
-    const xp = 25 + Math.round(run.score / 100);
-    addXp(xp); rw.push(["gold gm", `+${xp} XP`]);
-    if (run.poolSize >= 200) prof.bigPool++;
-    if (songs.length >= 10 && !tally.miss) prof.spotless++;
-    if (inSet) { if (run.correct === run.poolSize) { rw.push(["good", "Every song named"]); sfx("fanfare"); } }
-    else if (run.score > store.get("prevBest", 0)) { rw.push(["good", "New personal best"]); sfx("fanfare"); }
-    else if (run.score > 0) rw.push(["", `${(best - run.score).toLocaleString()} short of your best`]);
-    if (!inSet) store.set("prevBest", best);
-    saveProf(); checkBadges();
-    dot("board", true);
-  }
-  if (!rw.length) rw.push(["gm", `Rank ${levelOf(prof.xp).num} · ${prof.xp.toLocaleString()} XP`]);
-  $("rewards").innerHTML = rw.map(([c, t], i) => `<span class="pill ${c}" style="animation-delay:${300 + i * 120}ms">${esc(t)}</span>`).join("");
-  if (run.score >= 5000) { sparks($("overScore"), 50); } else sfx("over");
-  if (!inSet) loadBoard();
+  else loadBoard();
 }
-const stripHTML = (d, cls = "") => `<div class="strip ${cls}">${d.map((x, i) => `<i class="${x.w ? "w" + (x.s === 0 ? " h" : "") : "l"}" style="animation-delay:${i * 40}ms">${x.w ? CLIPS[x.s] < 1 ? "½" : CLIPS[x.s] : "✕"}</i>`).join("")}</div>`;
-// After a set is recorded: the link to send, everyone who has played it, and the songs
+// After a set is saved: the link to send, everyone who has played it, and the songs
 async function showSetResults(fresh) {
   // the worker serves a rich preview for this link, then sends people on to the game
   const url = `${API.replace(/\/api$/, "")}/c/${run.setId}`;
   $("shareUrl").textContent = url.replace(/^https?:\/\//, "");
   $("share").hidden = !run.submitted;
   $("copyBtn").onclick = async () => {
-    try { await navigator.clipboard.writeText(url); $("copyBtn").textContent = "Copied"; $("copyBtn").classList.add("copied"); sfx("tick"); }
-    catch { const r = document.createRange(); r.selectNodeContents($("shareUrl")); getSelection().removeAllRanges(); getSelection().addRange(r); $("copyBtn").textContent = "Select & copy"; }
+    try { await navigator.clipboard.writeText(url); $("copyBtn").textContent = "Copied"; $("copyBtn").classList.add("copied"); }
+    catch { const r = document.createRange(); r.selectNodeContents($("shareUrl")); getSelection().removeAllRanges(); getSelection().addRange(r); $("copyBtn").textContent = "Selected; copy it"; }
     setTimeout(() => { $("copyBtn").textContent = "Copy link"; $("copyBtn").classList.remove("copied"); }, 2200);
   };
   if (navigator.share) { $("shareBtn").hidden = false; $("shareBtn").onclick = () => navigator.share({ title: "Psalmless challenge", text: `I scored ${run.score.toLocaleString()} on ${run.poolSize} worship songs. Can you beat it?`, url }).catch(() => {}); }
   try {
     const info = fresh || await api(`/sets/${run.setId}?run=${run.id}`);
     let res = (info.results || []).filter(r => typeof r.score === "number");
-    // until you record, you appear as an unnamed row so you can see where you'd land
+    // until you save, you appear as an unnamed row so you can see where you'd land
     if (!run.submitted) res = [...res, { run: run.id, name: "You", score: run.score, detail: run.history || [], pending: true }].sort((a, b) => b.score - a.score);
     $("shareSub").textContent = res.length > 1 ? `${res.length} have played` : "You're the first";
-    $("compare").innerHTML = res.map((r, i) => `<li class="${r.run === run.id ? "me" : ""}" style="animation-delay:${i * 40}ms"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.run === run.id && !r.pending ? "<small>you</small>" : ""}</span><span class="sc">${r.score.toLocaleString()}</span>${stripHTML(r.detail, "mini")}</li>`).join("");
+    $("compare").innerHTML = res.map((r, i) => `<li class="${r.run === run.id ? "me" : ""}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.run === run.id && !r.pending ? "<small>you</small>" : ""}</span><span class="sc">${r.score.toLocaleString()}</span><div class="strip mini">${stripCells(r.detail)}</div></li>`).join("");
     $("compare").hidden = !res.length;
     if (info.songs) {
       const d = run.history || [];
-      $("songlist").innerHTML = info.songs.map((sg, i) => `<li><img src="${esc(sg.art)}" alt=""><span class="t">${esc(sg.title)}<small>${esc(sg.artist)} · ${sg.year}</small></span><span class="r ${d[i] ? d[i].w ? "w" : "l" : ""}">${d[i] ? d[i].w ? `${CLIPS[d[i].s]}s · +${d[i].p.toLocaleString()}` : "missed" : ""}</span></li>`).join("");
+      $("songlist").innerHTML = info.songs.map((sg, i) => `<li><img src="${esc(sg.art)}" alt=""><span class="t">${esc(sg.title)}<small>${esc(sg.artist)}, ${sg.year}</small></span><span class="r ${d[i] ? d[i].w ? "w" : "l" : ""}">${d[i] ? d[i].w ? `${CLIPS[d[i].s]}s, +${d[i].p.toLocaleString()}` : "missed" : ""}</span></li>`).join("");
       $("songsBox").hidden = false;
     }
   } catch (e) { $("overStatus").textContent = e.message; }
@@ -1776,18 +1261,13 @@ $("nameForm").onsubmit = async e => {
     $("nameForm").hidden = true;
     if (run.mode === "set") {
       const n = r.results.length;
-      $("overStatus").textContent = n === 1 ? "Recorded. Send the link and see how your friends do." : `Recorded: #${r.rank} of ${n} who have played this set.`;
-      sparks($("overScore"), 30); sfx("fanfare");
+      $("overStatus").textContent = n === 1 ? "Saved. Send the link and see how your friends do." : `Saved. You're #${r.rank} of ${n} on this challenge.`;
       showSetResults({ results: r.results, songs: (await api(`/sets/${run.setId}?run=${run.id}`)).songs });
-      if (r.rank === 1 && n > 1) toast("♔", `Top of this challenge`, `#1 of ${n}`, "", 3500);
       return;
     }
-    $("overStatus").innerHTML = `Written in the Book of Life at <b>#${r.rank}</b>. ${verseHTML(V.board)}`;
-    myRun = run.id;
+    $("overStatus").textContent = `You're #${r.rank} on the leaderboard.`;
+    $("againBtn").classList.add("primary");
     boardPeriod = "all"; renderBoard(r.top);
-    sparks($("overScore"), 40); sfx("fanfare");
-    prof.inscribed++; saveProf(); officeEvent("inscribed"); checkBadges();
-    if (r.rank <= 10) toast("♔", `#${r.rank} in the Book of Life`, r.rank === 1 ? "Top of the book" : "Top ten", "", 4000);
   } catch (err) {
     $("overStatus").textContent = err.message;
   } finally { $("nameForm").querySelector("button").disabled = false; }
@@ -1841,34 +1321,27 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- leaderboard ---------- */
-let boardPeriod = "all", myRun = store.get("myRun", null), lastTop = [];
+let boardPeriod = "all";
 async function loadBoard() {
   try { renderBoard((await api(`/leaderboard?period=${boardPeriod}`)).top); }
-  catch { $("board").innerHTML = ""; $("boardEmpty").hidden = false; $("boardEmpty").textContent = "Couldn't reach the leaderboard."; }
+  catch { $("board").innerHTML = ""; $("chase").hidden = true; $("boardEmpty").hidden = false; $("boardEmpty").textContent = "Couldn't reach the leaderboard. Check your connection and try again."; }
 }
 function renderBoard(top) {
-  store.set("myRun", myRun);
-  lastTop = top;
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === boardPeriod));
   $("boardEmpty").hidden = !!top.length;
-  $("boardEmpty").textContent = "No names written yet. Be the first.";
+  $("boardEmpty").textContent = "No scores yet. Finish a ranked game to be the first.";
   // the entry your best would land just below, so there is something concrete to chase
   const mine = myName ? top.findIndex(t => t.name === myName) : -1;
   const target = top.findIndex(t => t.score > best);
   const chaseIdx = mine >= 0 ? mine - 1 : target >= 0 ? [...top].map((t, i) => i).filter(i => top[i].score > best).at(-1) : -1;
   $("board").innerHTML = top.map((t, i) =>
-    `<li class="${myName && t.name === myName ? "me" : i === chaseIdx ? "next" : ""}" style="animation-delay:${i * 30}ms"><span class="nm">${esc(t.name)}<small>${t.correct} songs · ${t.poolSize} pool</small></span><span class="sc">${t.score.toLocaleString()}</span></li>`).join("");
+    `<li class="${myName && t.name === myName ? "me" : i === chaseIdx ? "next" : ""}"><span class="nm">${esc(t.name)}<small>${t.correct} of ${t.poolSize.toLocaleString()}</small></span><span class="sc">${t.score.toLocaleString()}</span></li>`).join("");
   const c = $("chase");
-  if (mine === 0) {
-    c.hidden = false; $("chaseT").textContent = "You hold the top of the book"; $("chaseS").textContent = "Defend it.";
-  } else if (chaseIdx >= 0 && top[chaseIdx]) {
-    const gap = top[chaseIdx].score - best + 1;
-    c.hidden = false;
-    $("chaseT").textContent = `${gap.toLocaleString()} more to pass ${top[chaseIdx].name}`;
-    $("chaseS").textContent = `#${chaseIdx + 1} · ${top[chaseIdx].score.toLocaleString()} · your best ${best.toLocaleString()}`;
-  } else if (top.length && best > top[0].score) {
-    c.hidden = false; $("chaseT").textContent = "Your best beats every name here"; $("chaseS").textContent = "Inscribe your next ranked run.";
-  } else c.hidden = true;
+  c.hidden = false;
+  if (mine === 0) c.textContent = "You hold the top spot.";
+  else if (chaseIdx >= 0 && top[chaseIdx]) c.textContent = `${(top[chaseIdx].score - best + 1).toLocaleString()} more points to pass ${top[chaseIdx].name} at #${chaseIdx + 1}. Your best is ${best.toLocaleString()}.`;
+  else if (top.length && best > top[0].score) c.textContent = "Your best beats every score here. Add your next ranked game.";
+  else c.hidden = true;
 }
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { boardPeriod = b.dataset.p; loadBoard(); });
 
@@ -1877,8 +1350,7 @@ async function resume(id) {
   try {
     const r = await api(`/runs/${id}?titles`);
     titles = r.titles; delete r.titles;
-    run = r; shown.score = r.score;
-    if (!tally || tally.id !== id) newTally(id);
+    run = r;
     if (r.mode === "set") { chal = r.setId; if (!chalInfo) api(`/sets/${chal}`).then(i => { chalInfo = i; renderHud(); }).catch(() => {}); }
     renderHud();
     if (r.state === "over") { showOver(); return; }
@@ -1892,8 +1364,7 @@ async function resume(id) {
 }
 async function openChallenge(id) {
   showPanel("intro");
-  $("chalIntro").hidden = false; $("chalTitle").textContent = "A challenge for you"; $("chalLead").textContent = ""; $("chalFrom").textContent = "Opening the challenge…"; $("chalFromSub").textContent = ""; $("chalHym").hidden = true;
-  $("gameTitle").textContent = "Challenge";
+  $("chalIntro").hidden = false; $("chalTitle").textContent = "A challenge for you"; $("chalLead").textContent = ""; $("chalFrom").textContent = "Opening the challenge…"; $("chalHym").hidden = true;
   renderModes(); renderHud();
   try {
     chalInfo = await api(`/sets/${id}`);
@@ -1901,12 +1372,12 @@ async function openChallenge(id) {
     const res = Array.isArray(chalInfo.results) ? chalInfo.results : [], first = res[0];
     const others = res.length > 1 ? ` and ${res.length - 1} other${res.length > 2 ? "s" : ""}` : "";
     $("chalTitle").textContent = first && first.name ? `${first.name} challenges you` : `A ${chalInfo.size}-song challenge`;
-    $("chalLead").textContent = `Name ${chalInfo.size} worship songs from the first half-second. Miss, and hear a little more.`;
-    $("chalFrom").textContent = first && first.name ? `${first.name}${others} already played it` : "Nobody has played it yet";
-    $("chalFromSub").textContent = "Same songs, same order · scores revealed when you finish";
+    $("chalLead").textContent = `Name ${chalInfo.size} worship songs from the first half-second. Miss, and you hear a little more.`;
+    $("chalFrom").textContent = (first && first.name ? `${first.name}${others} already played it.` : "Nobody has played it yet.") +
+      " Everyone hears the same songs in the same order, and scores show when you finish.";
     const st = chalInfo.settings || {};
     if (Array.isArray(st.artists) && Array.isArray(st.years)) {
-      $("chalHymLine").textContent = `· ${st.artists.length} artist${st.artists.length === 1 ? "" : "s"} · ${st.years[0]}–${st.years[1]} · ${(POP_STEPS[st.pop] || POP_STEPS[DEFAULT_POP]).short.toLowerCase()}`;
+      $("chalHymLine").textContent = `${st.artists.length} artist${st.artists.length === 1 ? "" : "s"}, ${(POP_STEPS[st.pop] || POP_STEPS[DEFAULT_POP]).phrase}, ${yearSpan(st.years[0], st.years[1])}`;
       $("chalArtists").innerHTML = st.artists.map(n => `<span class="chip">${esc(n)}</span>`).join("");
       $("chalHym").hidden = false;
     } else $("chalHym").hidden = true;
@@ -1919,17 +1390,16 @@ async function openChallenge(id) {
       location.reload(); return;
     }
     $("chalTitle").textContent = "This challenge couldn't be opened"; $("chalLead").textContent = "";
-    $("chalFrom").textContent = e.status ? e.message : "Try again in a minute.";
-    $("chalFromSub").textContent = "Start a new run instead."; $("chalHym").hidden = true;
+    $("chalFrom").textContent = (e.status ? e.message : "Try again in a minute.") + " You can start a new game instead.";
+    $("chalHym").hidden = true;
     chal = null; history.replaceState(null, "", location.pathname + location.search);
-    setTimeout(() => { $("chalIntro").hidden = true; renderModes(); renderHud(); }, 4000);
+    setTimeout(() => { $("chalIntro").hidden = true; showPanel("intro"); renderModes(); renderHud(); }, 4000);
   }
   renderModes();
 }
 $("introLine").innerHTML = verseHTML(pick(V.intro));
-ensureDaily();
-renderGm(); renderModes();
-renderChips(); renderDiscover(); renderPop(); renderYears(); renderHud(); renderQuests(); renderRecord();
+renderModes();
+renderChips(); renderDiscover(); renderPop(); renderYears(); renderHud();
 setView(wide.matches ? "hymnal" : "play");
 previewPool(); loadBoard();
 const saved = store.get("run", null);
@@ -1937,7 +1407,7 @@ const savedSet = store.get("runSet", null);
 if (chal && saved && savedSet === chal) resume(saved);
 else if (chal) { store.set("run", null); openChallenge(chal); }
 else if (saved) resume(saved); else showPanel("intro");
-window.addEventListener("hashchange", () => { const c = (location.hash.match(/^#c-([a-z0-9]{8})$/) || [])[1]; if (c && c !== chal) { chal = c; chalInfo = null; stopAudio(); run = null; shown.score = 0; store.set("run", null); renderHud(); openChallenge(c); if (!wide.matches) setView("play"); } });
+window.addEventListener("hashchange", () => { const c = (location.hash.match(/^#c-([a-z0-9]{8})$/) || [])[1]; if (c && c !== chal) { chal = c; chalInfo = null; stopAudio(); run = null; store.set("run", null); renderHud(); openChallenge(c); if (!wide.matches) setView("play"); } });
 </script>
 </body>
 </html>
